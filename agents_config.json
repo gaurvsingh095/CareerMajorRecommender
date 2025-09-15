@@ -1,0 +1,116 @@
+{
+  "course-major-recommender": {
+    "name": "Eller Major Recommender",
+    "description": "Rank Eller BSBA majors, generate plan links, and layer Entrepreneurship in senior year.",
+    "emoji": "🎓",
+    "model": "gpt-4o",
+    "temperature": 0.4,
+    "system_prompt": "You are the Key-VΦid Eller Major Recommender agent. You recommend Eller College BSBA majors and produce a polished report in Markdown. Be precise, practical, and student-centered. Prefer clarity over fluff. Use the Onyx+Gold tone: crisp, confident, helpful.",
+    "knowledge_inputs": [
+      "Majors to consider: MIS, Business Analytics, Finance, Accounting, Business Management, Marketing, Entrepreneurship (senior-year sequence).",
+      "Eller sample plan anchors (append to https://eller.arizona.edu/programs/undergraduate/advising/sample-plans):\\n- MIS: #management-information-systems\\n- Business Analytics: #business-analytics\\n- Finance: #finance\\n- Accounting: #accounting\\n- Business Management: #business-management\\n- Marketing: #marketing\\n- Entrepreneurship: #entrepreneurship-senior-year-program\\n- Operations & Supply Chain (if needed): #operations-&-supply-chain-management",
+      "Foundational course themes (Years 1–2): Calculus (business calc ok), Micro/Macro Econ, Accounting I & II, Business Statistics, Intro to Info Systems & Spreadsheet Modeling, Business Writing/Communication, Ops/Management Survey.",
+      "Major-specific foundations to weave in when relevant: MIS→ Programming (Python/Java) & SQL; BA→ Python/R + SQL + BI; Finance→ Corporate finance & Excel modeling; Accounting→ Financial & Managerial sequence; Management→ Org behavior & project management; Marketing→ Principles + consumer & research; OSCM→ Ops, supply chain, quality/project mgmt.",
+      "Treat Entrepreneurship as a senior-year sequence layered on top of a base major.",
+      "Output format must strictly follow the six section headings provided by the user’s instruction."
+    ],
+    "capabilities": { "scraping": false, "webSearch": false },
+    "input_schema": {
+      "title": "Eller Intake",
+      "type": "object",
+      "properties": {
+        "strengths": { "type": "string", "title": "Academic strengths", "description": "Subjects/grades, tools (Python/SQL/Tableau), leadership, etc.", "format": "textarea" },
+        "goals":      { "type": "string", "title": "Career goals", "format": "textarea" },
+        "interests":  { "type": "string", "title": "Interests & hobbies", "format": "textarea" },
+        "experience": { "type": "string", "title": "Relevant experience", "format": "textarea" },
+        "regions":    { "type": "string", "title": "Preferred regions", "format": "textarea" },
+        "constraints":{ "type": "string", "title": "Constraints/preferences", "format": "textarea" },
+        "notes":      { "type": "string", "title": "Additional notes (optional)", "format": "textarea" }
+      }
+    }
+  },
+
+  "engineering-major-recommender": {
+    "name": "Engineering Major Recommender",
+    "description": "Map UArizona engineering disciplines to your profile with staged course planning.",
+    "emoji": "🛠️",
+    "model": "gpt-4o",
+    "temperature": 0.35,
+    "system_prompt": "You recommend UArizona engineering majors (Aero, Bio, Chem, Civil, ECE, Industrial, Materials, Mining, Systems, etc.) and produce a Markdown plan with first-year cores, gateways, and specialization paths.",
+    "knowledge_inputs": [
+      "Weigh math/physics readiness, hands-on vs theory, hardware vs software, design projects, labs, and co-op.",
+      "Suggest clubs/teams: Baja/Formula SAE, UAV/CubeSat, IEEE/ACM, Solar Racing, Engineering Ambassadors."
+    ],
+    "capabilities": { "scraping": false, "webSearch": false },
+    "input_schema": {
+      "title": "Engineering Intake",
+      "type": "object",
+      "properties": {
+        "strengths": { "type": "string", "title": "Technical strengths", "format": "textarea" },
+        "goals":      { "type": "string", "title": "Career goals", "format": "textarea" },
+        "interests":  { "type": "string", "title": "Interests", "format": "textarea" },
+        "experience": { "type": "string", "title": "Projects/labs/comps", "format": "textarea" },
+        "math_readiness":    { "type": "string", "title": "Math readiness", "enum": ["Pre-Calc","Calculus I","Calculus II+"] },
+        "physics_readiness": { "type": "string", "title": "Physics readiness", "enum": ["None","Mechanics","E&M / Waves"] },
+        "preferences": { "type": "string", "title": "Preferences", "format": "textarea" },
+        "constraints": { "type": "string", "title": "Constraints", "format": "textarea" },
+        "notes":       { "type": "string", "title": "Additional notes (optional)", "format": "textarea" }
+      }
+    }
+  },
+
+  "mining-major-recommender": {
+    "name": "Mining & Related Recommender",
+    "description": "Assess fit for Mining, Geological, Materials, and related disciplines with safety & sustainability lenses.",
+    "emoji": "⛏️",
+    "model": "gpt-4o",
+    "temperature": 0.35,
+    "system_prompt": "You recommend Mining, Geological, Materials and adjacent majors; include safety, ESG, fieldwork tolerance, and regional demand. Output polished Markdown.",
+    "knowledge_inputs": [
+      "Consider fieldwork tolerance, PPE/safety, environmental compliance, automation, and remote operations.",
+      "Point to UArizona Mining & Geological strengths; suggest industry partners and internships."
+    ],
+    "capabilities": { "scraping": false, "webSearch": false },
+    "input_schema": {
+      "title": "Mining Intake",
+      "type": "object",
+      "properties": {
+        "strengths": { "type": "string", "title": "Strengths", "format": "textarea" },
+        "goals":      { "type": "string", "title": "Career goals", "format": "textarea" },
+        "interests":  { "type": "string", "title": "Interests", "format": "textarea" },
+        "experience": { "type": "string", "title": "Experience", "format": "textarea" },
+        "fieldwork_tolerance": { "type": "string", "title": "Fieldwork tolerance", "enum": ["Low","Medium","High"] },
+        "regions":    { "type": "string", "title": "Preferred regions", "format": "textarea" },
+        "constraints":{ "type": "string", "title": "Constraints", "format": "textarea" },
+        "notes":      { "type": "string", "title": "Additional notes (optional)", "format": "textarea" }
+      }
+    }
+  },
+
+  "stem-major-recommender": {
+    "name": "STEM Major Recommender",
+    "description": "Recommend STEM pathways (CS/DS, Math/Stats, Physics, Chem, Bio, Earth; industry or research track).",
+    "emoji": "🧪",
+    "model": "gpt-4o",
+    "temperature": 0.35,
+    "system_prompt": "You recommend STEM majors and tracks (industry vs research) with labs, clubs, and early research options. Output polished Markdown.",
+    "knowledge_inputs": [
+      "For research tracks, surface UArizona undergraduate research programs, REUs, and honors options.",
+      "For industry tracks, include internship timelines, portfolio tips, and common toolchains."
+    ],
+    "capabilities": { "scraping": false, "webSearch": false },
+    "input_schema": {
+      "title": "STEM Intake",
+      "type": "object",
+      "properties": {
+        "strengths": { "type": "string", "title": "Strengths", "format": "textarea" },
+        "goals":      { "type": "string", "title": "Career goals", "format": "textarea" },
+        "track":      { "type": "string", "title": "Preferred track", "enum": ["Industry","Research","Open / Unsure"] },
+        "interests":  { "type": "string", "title": "Interests", "format": "textarea" },
+        "experience": { "type": "string", "title": "Projects / labs / internships", "format": "textarea" },
+        "constraints":{ "type": "string", "title": "Constraints or preferences", "format": "textarea" },
+        "notes":      { "type": "string", "title": "Additional notes (optional)", "format": "textarea" }
+      }
+    }
+  }
+}

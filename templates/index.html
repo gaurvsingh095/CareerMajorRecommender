@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Key‑VΦid • Agent Workbench (Onyx + Gold)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    /* =========================
+       Onyx + Gold design system
+       ========================= */
+    :root{
+      --gold-1:#E1BA63; --gold-2:#C6924A; --gold-3:#8B6B2E;
+      --bg:#0B0C0E; --panel:#111317; --panel-2:#14171C;
+      --ink:#ECEDEF; --muted:#B9BDC7; --ring:rgba(225,186,99,.35);
+      --radius:18px; --nav-h:66px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    html{scrollbar-gutter:stable both-edges}
+    body{
+      margin:0; color:var(--ink); background:var(--bg);
+      font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      line-height:1.65; overflow-x:hidden;
+      background-image:
+        linear-gradient(135deg, rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(45deg,  rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size:28px 28px, 28px 28px; background-position:0 0, 14px 14px;
+    }
+    body::after{
+      content:""; position:fixed; inset:0; pointer-events:none;
+      background:
+        radial-gradient(1200px 650px at 10% 10%, rgba(225,186,99,.10), transparent 55%),
+        radial-gradient(1000px 600px at 90% 85%, rgba(198,146,74,.10), transparent 55%),
+        radial-gradient(80% 100% at 50% 120%, rgba(0,0,0,.55), transparent 60%);
+      mix-blend-mode:screen; opacity:.75;
+    }
+
+    /* Top Nav */
+    .nav{
+      position:sticky; top:0; z-index:50; height:var(--nav-h);
+      display:flex; align-items:center; gap:16px; padding:0 18px;
+      background:rgba(17,19,23,.78); backdrop-filter:saturate(140%) blur(10px);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .brand{
+      font-weight:800; letter-spacing:.02em; margin-right:auto; font-size:18px; line-height:1;
+      background:linear-gradient(120deg, var(--gold-3), var(--gold-1) 30%, var(--gold-2) 55%, #F6D58E 70%, var(--gold-3));
+      background-size:200% 100%; -webkit-background-clip:text; background-clip:text; color:transparent;
+      animation:foil 12s ease-in-out infinite;
+    }
+    @keyframes foil{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+    .menu{display:flex; gap:6px; align-items:center}
+    .menu a, .menu button{
+      color:var(--ink); text-decoration:none; font-weight:600;
+      padding:10px 12px; border-radius:12px; border:0; background:transparent;
+      display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+      transition:background .18s, transform .18s, color .18s;
+    }
+    .menu a:hover,.menu button:hover{ background:rgba(255,255,255,.06); transform:translateY(-1px) }
+    .menu-toggle{display:none}
+    @media (max-width:880px){
+      .menu{display:none}
+      .menu.open{display:flex; position:absolute; top:var(--nav-h); left:0; right:0; padding:10px; background:rgba(17,19,23,.95); border-bottom:1px solid rgba(255,255,255,.08); flex-direction:column; align-items:flex-start}
+      .menu-toggle{display:inline-flex; margin-left:auto; background:transparent; border:0; color:var(--ink); font-weight:800; padding:8px 10px; border-radius:10px}
+    }
+
+    /* Layout */
+    .wrap{ max-width:1250px; margin:0 auto; padding:22px 18px }
+    .hero{ margin-bottom:14px; padding:18px; border-radius:var(--radius); background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)), var(--panel); border:1px solid rgba(255,255,255,.08) }
+    .hero h1{ margin:0 0 6px; font-size:clamp(22px,4.2vw,34px) }
+    .hero p{ margin:0; color:#d7caa3 }
+
+    .layout{ display:grid; grid-template-columns:300px 1fr; gap:18px }
+    @media (max-width:1100px){ .layout{ grid-template-columns:1fr } }
+
+    /* Agent list */
+    .agents{ position:sticky; top:calc(var(--nav-h) + 12px); align-self:start; padding:14px; border-radius:var(--radius); background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)), var(--panel); border:1px solid rgba(255,255,255,.08) }
+    .agents h3{ margin:0 0 10px }
+    .agent-grid{ display:grid; gap:10px }
+    .agent-card{ display:flex; gap:10px; align-items:center; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.02); cursor:pointer; transition:background .18s, transform .18s, border-color .18s }
+    .agent-card:hover{ background:rgba(255,255,255,.06); border-color:rgba(225,186,99,.45); transform:translateY(-1px) }
+    .agent-card.active{ background:linear-gradient(135deg, rgba(225,186,99,.10), rgba(198,146,74,.10)); border-color:rgba(225,186,99,.45); box-shadow:0 10px 22px -14px var(--ring) }
+    .agent-emoji{ width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; background:radial-gradient(circle at 30% 20%, #ffe6b0, var(--gold-1)); color:#111; font-weight:900; }
+    .agent-title{ font-weight:800 }
+    .agent-desc{ font-size:12px; color:#cbbf9a }
+
+    /* Panel */
+    .panel{ position:relative; overflow:hidden; background:var(--panel); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); box-shadow:0 8px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04) }
+    .panel .inner{ padding:18px }
+    .panel h2{ margin:0 0 8px }
+    .section-note{ color:#d7caa3; margin-top:-2px; margin-bottom:8px }
+
+    /* Fields */
+    .fields{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px }
+    .field{ display:flex; flex-direction:column; gap:6px }
+    .field.full{ grid-column:1 / -1 }
+    label{ font-weight:700; font-size:.92rem; color:#eae6d3 }
+    input[type="text"], input[type="number"], input[type="url"], textarea, select{
+      width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:#1B1E25; color:#fff; outline:none; font-size:14px; transition:border-color .18s, box-shadow .18s
+    }
+    textarea{ min-height:110px; resize:vertical }
+    input:focus, textarea:focus, select:focus{ border-color:rgba(225,186,99,.45); box-shadow:0 0 0 3px rgba(225,186,99,.20) }
+
+    /* Actions */
+    .actions{ display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; margin-top:12px }
+    .btn{ padding:12px 16px; border:none; border-radius:12px; cursor:pointer; font-weight:800; color:#111; background:linear-gradient(135deg,#C6924A,#E1BA63); box-shadow:0 16px 40px -12px rgba(225,186,99,.45); transition:transform .18s, filter .18s }
+    .btn:hover{ transform:translateY(-1px); filter:brightness(1.03) }
+    .btn.ghost{ background:rgba(255,255,255,.06); color:#fff; border:1px solid rgba(255,255,255,.12); box-shadow:none }
+
+    /* Stepper */
+    .progress{ height:8px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden; margin:10px 0 2px }
+    .progress > span{ display:block; height:100%; background:linear-gradient(90deg,#C6924A,#E1BA63); width:0% }
+
+    /* Report overlay */
+    #reportOverlay{ position:fixed; inset:0; background:rgba(11,12,14,.96); display:none; align-items:center; justify-content:center; padding:24px; z-index:100 }
+    #reportBox{ background:#151826; border:1px solid rgba(255,255,255,.10); border-radius:16px; max-width:1100px; width:100%; max-height:92vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 50px 100px -10px rgba(225,186,99,.45) }
+    #reportHeader{ display:flex; justify-content: space-between; align-items:center; padding:14px 18px; gap:10px; border-bottom:1px solid rgba(255,255,255,.08) }
+    #reportHeader h2{ margin:0; font-size:1.2rem; font-weight:800; background:linear-gradient(90deg,#C6924A,#E1BA63); -webkit-background-clip:text; -webkit-text-fill-color:transparent }
+    #reportActions{ display:flex; gap:8px; flex-wrap:wrap }
+    .report-btn{ padding:10px 14px; border:none; border-radius:10px; font-weight:700; cursor:pointer }
+    .report-btn.copy, .report-btn.secondary{ background:rgba(255,255,255,.08); color:#fff }
+    .report-btn.close{ background:linear-gradient(135deg,#C6924A,#E1BA63); color:#111 }
+    #reportContent{ flex:1; overflow:auto; padding:18px; background:#0B0C0E }
+    #reportContent pre{ display:none !important }
+
+    /* Footer */
+    footer{ margin-top:26px; padding:26px 18px; text-align:center; border-top:1px solid rgba(255,255,255,.08); background:linear-gradient(180deg, rgba(255,255,255,.02), transparent); color:#d7caa3; font-size:14px }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar{ width:12px; height:12px }
+    ::-webkit-scrollbar-track{ background:linear-gradient(180deg, rgba(238,203,120,.18), rgba(198,146,74,.10)); border-left:1px solid rgba(238,203,120,.35) }
+    ::-webkit-scrollbar-thumb{ background:linear-gradient(180deg, var(--gold-2), var(--gold-1)); border-radius:10px; border:2px solid rgba(0,0,0,.35); box-shadow:inset 0 0 0 1px rgba(255,255,255,.22) }
+    *{ scrollbar-width:thin; scrollbar-color: var(--gold-1) rgba(255,255,255,.08) }
+  </style>
+</head>
+<body>
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="brand">KEY‑VΦID</div>
+    <button class="menu-toggle" aria-expanded="false" aria-controls="menu">Menu ▾</button>
+    <div id="menu" class="menu">
+      <a href="#">Home</a>
+      <a href="#">Agents</a>
+      <a href="#">About</a>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <div class="hero">
+      <h1>Agent Workbench — KeyVoid Gold</h1>
+      <p>Select one of your agents, complete the dynamic intake, and generate a polished Markdown report. Auto‑detects <code>/api/agents</code> if available, otherwise uses local fallback config. Entrepreneurship or other sequencing constraints are respected by the agent where relevant.</p>
+      <div class="progress" aria-label="Progress"><span id="progressBar"></span></div>
+      <div class="tiny" id="progressText">Step 1 of 1</div>
+    </div>
+
+    <div class="layout">
+      <!-- AGENT PICKER -->
+      <aside class="agents" aria-label="Agents">
+        <h3>Agents</h3>
+        <div class="agent-grid" id="agentGrid"></div>
+      </aside>
+
+      <!-- PANEL -->
+      <section class="panel">
+        <div class="inner">
+          <h2 id="sectionTitle">Select an agent</h2>
+          <div class="section-note" id="sectionNote">Pick an agent on the left to load fields.</div>
+
+          <form id="form" novalidate>
+            <div class="fields" id="fields"></div>
+            <div class="actions">
+              <button type="button" class="btn ghost" id="prevBtn" style="display:none">← Back</button>
+              <button type="button" class="btn ghost" id="saveBtn">Save Draft</button>
+              <button type="button" class="btn" id="nextBtn" style="display:none">Continue →</button>
+              <button type="button" class="btn" id="genBtn" style="display:none">Generate Report</button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>© <span id="y"></span> Key‑VΦid. All rights reserved.</footer>
+
+  <!-- REPORT OVERLAY -->
+  <div id="reportOverlay" aria-hidden="true">
+    <div id="reportBox">
+      <div id="reportHeader">
+        <h2 id="reportTitle">Agent Report</h2>
+        <div id="reportActions">
+          <button class="report-btn copy" id="copyReport">Copy</button>
+          <button class="report-btn secondary" id="downloadMd">.md</button>
+          <button class="report-btn secondary" id="toggleDebug">Debug</button>
+          <button class="report-btn close" id="closeReport">Close</button>
+        </div>
+      </div>
+      <div id="reportContent"></div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================================
+    // 1) Fallback agent registry (used if /api/agents not present)
+    //    Update slugs/endpoints to match your backend.
+    // ==========================================================
+    const DEFAULT_AGENTS = [
+      {
+        slug: 'course-major-recommender',
+        name: 'Eller Major Recommender',
+        emoji: '🎓',
+        endpoint: '/api/course-major-recommender/chat',
+        description: 'Rank Eller BSBA majors and produce a four‑year plan. Entrepreneurship runs senior‑year only and is layered on top.',
+        schema: [
+          { key:'intakeA', title:'Intake A', note:'Academic strengths, career goals, and interests.', fields:[
+              {type:'textarea', name:'a.strengths', label:'Academic strengths (subjects, grades)', full:true, placeholder:'E.g., strong in math & stats, comfortable with Python/SQL; excellent writing; led projects'},
+              {type:'textarea', name:'a.goals', label:'Career goals', full:true, placeholder:'E.g., data‑driven product builder, analytics in healthcare, investment finance, consulting, etc.'},
+              {type:'textarea', name:'a.interests', label:'Interests & hobbies', full:true, placeholder:'E.g., coding, statistics, design, social media, leadership, entrepreneurship, investing'}
+            ]},
+          { key:'intakeB', title:'Intake B', note:'Experience, regions, constraints.', fields:[
+              {type:'textarea', name:'b.experience', label:'Relevant experience', full:true, placeholder:'Internships, projects, certifications (SQL, Tableau, Python, etc.)'},
+              {type:'textarea', name:'b.regions', label:'Preferred regions', full:true, placeholder:'E.g., USA (Eller), short‑term abroad: Germany, Canada'},
+              {type:'textarea', name:'b.constraints', label:'Constraints or preferences', full:true, placeholder:'Budget, language, timeline (accelerated 3‑year, part‑time, scholarship‑focused)'}
+            ]},
+          { key:'review', title:'Review & Generate', note:'Optional notes before generating.', fields:[
+              {type:'textarea', name:'review.notes', label:'Additional notes (optional)', full:true}
+            ]}
+        ]
+      },
+      {
+        slug: 'engineering-major-recommender',
+        name: 'Engineering Major Recommender',
+        emoji: '🛠️',
+        endpoint: '/api/engineering-major-recommender/chat',
+        description: 'Map UArizona engineering disciplines (Aero, Bio, Chem, Civil, ECE, Industrial, Materials, Mining, Systems, etc.) to your profile with a staged course plan.',
+        schema: [
+          { key:'engA', title:'Intake A', note:'Strengths, goals, interests.', fields:[
+              {type:'textarea', name:'e.strengths', label:'Technical strengths', full:true, placeholder:'Math readiness (Calc), Physics, Coding (Python/C++), circuits, mechanics, design'},
+              {type:'textarea', name:'e.goals', label:'Career goals', full:true, placeholder:'E.g., robotics R&D, aerospace systems, renewable energy, medical devices'},
+              {type:'textarea', name:'e.interests', label:'Interests', full:true, placeholder:'Robotics, ML, control systems, hardware, fluids, structures, manufacturing'}
+            ]},
+          { key:'engB', title:'Intake B', note:'Experience & preferences.', fields:[
+              {type:'textarea', name:'e.experience', label:'Projects / labs / comps', full:true, placeholder:'Robotics club, Formula SAE, CubeSat, hackathons, internships'},
+              {type:'select',   name:'e.math_readiness', label:'Math readiness', options:['Pre‑Calc','Calculus I','Calculus II+']},
+              {type:'select',   name:'e.physics_readiness', label:'Physics readiness', options:['None','Mechanics','E&M / Waves']},
+              {type:'textarea', name:'e.preferences', label:'Preferences', full:true, placeholder:'Hands‑on build vs theory; software vs hardware; team vs solo; field vs lab'},
+              {type:'textarea', name:'e.constraints', label:'Constraints', full:true, placeholder:'Time, budget, transfer/AP credits, work‑study, co‑op interest'}
+            ]},
+          { key:'review', title:'Review & Generate', note:'Notes (optional).', fields:[
+              {type:'textarea', name:'review.notes', label:'Additional notes (optional)', full:true}
+            ]}
+        ]
+      },
+      {
+        slug: 'mining-major-recommender',
+        name: 'Mining & Related Recommender',
+        emoji: '⛏️',
+        endpoint: '/api/mining-major-recommender/chat',
+        description: 'Assess fit for Mining, Geological, Materials, and related disciplines with safety, sustainability, and fieldwork lenses.',
+        schema: [
+          { key:'minA', title:'Intake A', note:'Background & goals.', fields:[
+              {type:'textarea', name:'m.strengths', label:'Strengths', full:true, placeholder:'Math, physics, geology, coding, GIS/CAD, chemistry'},
+              {type:'textarea', name:'m.goals', label:'Career goals', full:true, placeholder:'Operations, planning, processing, ESG/sustainability, automation'},
+              {type:'textarea', name:'m.interests', label:'Interests', full:true, placeholder:'Fieldwork, heavy equipment, drones, sensors, mineral economics'}
+            ]},
+          { key:'minB', title:'Intake B', note:'Experience, regions, constraints.', fields:[
+              {type:'textarea', name:'m.experience', label:'Experience', full:true, placeholder:'Field trips, labs, internships, maker projects'},
+              {type:'select',   name:'m.fieldwork_tolerance', label:'Fieldwork tolerance', options:['Low','Medium','High']},
+              {type:'textarea', name:'m.regions', label:'Preferred regions', full:true, placeholder:'AZ, NV, UT, NM; Canada; Latin America; Australia'},
+              {type:'textarea', name:'m.constraints', label:'Constraints', full:true, placeholder:'Budget, timeline, visa, safety/health constraints'}
+            ]},
+          { key:'review', title:'Review & Generate', note:'Notes (optional).', fields:[
+              {type:'textarea', name:'review.notes', label:'Additional notes (optional)', full:true}
+            ]}
+        ]
+      },
+      {
+        slug: 'stem-major-recommender',
+        name: 'STEM Major Recommender',
+        emoji: '🧪',
+        endpoint: '/api/stem-major-recommender/chat',
+        description: 'Recommend STEM pathways (CS, DS, Math/Stats, Physics, Chemistry, Biology, Earth, interdisciplinary) with research/industry tracks.',
+        schema: [
+          { key:'sA', title:'Intake A', note:'Strengths, goals, interests.', fields:[
+              {type:'textarea', name:'s.strengths', label:'Strengths', full:true, placeholder:'Programming stack, math level, lab skills, communication'},
+              {type:'textarea', name:'s.goals', label:'Career goals', full:true, placeholder:'Research, software engineering, biotech, data science, academia'},
+              {type:'select',   name:'s.track', label:'Preferred track', options:['Industry','Research','Open / Unsure']},
+              {type:'textarea', name:'s.interests', label:'Interests', full:true, placeholder:'AI/ML, HCI, theory, quantum, neuro, ecology, climate'}
+            ]},
+          { key:'sB', title:'Intake B', note:'Experience & constraints.', fields:[
+              {type:'textarea', name:'s.experience', label:'Projects / labs / internships', full:true, placeholder:'Repos, papers, competitions, volunteering'},
+              {type:'textarea', name:'s.constraints', label:'Constraints or preferences', full:true, placeholder:'Budget, timeline, visa, cohort pace, honors'},
+              {type:'textarea', name:'review.notes', label:'Additional notes (optional)', full:true}
+            ]}
+        ]
+      }
+    ];
+
+    // ==========================================================
+    // 2) Runtime state
+    // ==========================================================
+    let AGENTS = [...DEFAULT_AGENTS];
+    let activeAgent = null;
+    let currentStep = 0;
+    const agentGrid = document.getElementById('agentGrid');
+    const fieldsWrap = document.getElementById('fields');
+    const sectionTitle = document.getElementById('sectionTitle');
+    const sectionNote = document.getElementById('sectionNote');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const genBtn  = document.getElementById('genBtn');
+
+    const LS_KEY_BASE = 'keyvoid.agentworkbench.v1.'; // per-agent suffix
+
+    // ==========================================================
+    // 3) Agent discovery (attempt /api/agents)
+    //    Expected shape: [{slug,name,description,endpoint?,emoji?,schema?}]
+    //    If endpoint missing, we infer /api/{slug}/chat
+    //    If schema missing, we will attempt to GET /api/{slug}/schema
+    // ==========================================================
+    async function discoverAgents(){
+      try{
+        const r = await fetch('/api/agents', {headers:{'Accept':'application/json'}});
+        if(!r.ok) throw new Error('no /api/agents');
+        const list = await r.json();
+        if(Array.isArray(list) && list.length){
+          AGENTS = list.map(a=>({
+            slug: a.slug || a.id,
+            name: a.name || a.title || a.slug,
+            description: a.description || a.summary || '',
+            emoji: a.emoji || '🤖',
+            endpoint: a.endpoint || `/api/${a.slug || a.id}/chat`,
+            schema: a.schema || a.input_schema || null
+          }));
+        }
+      }catch(e){ /* fallback to DEFAULT_AGENTS */ }
+      renderAgents();
+      // Auto-select first agent
+      if(AGENTS.length){ selectAgent(AGENTS[0].slug); }
+    }
+
+    function agentLSKey(slug){ return LS_KEY_BASE + slug; }
+
+    function loadAgentState(slug){
+      try{ return JSON.parse(localStorage.getItem(agentLSKey(slug))||'{}') }catch{return{}}
+    }
+    function saveAgentState(slug, state){ localStorage.setItem(agentLSKey(slug), JSON.stringify(state||{})); }
+
+    function deepify(flat){ const out={}; for(const [k,v] of Object.entries(flat||{})){ const parts=String(k).split('.'); let ptr=out; parts.forEach((p,i)=>{ if(i===parts.length-1){ ptr[p]=v } else { ptr[p]=ptr[p]||{}; ptr=ptr[p]; } }); } return out; }
+
+    function flatten(obj, prefix=''){ const res={}; for(const [k,v] of Object.entries(obj||{})){ const key = prefix?`${prefix}.${k}`:k; if(v && typeof v==='object' && !Array.isArray(v)){ Object.assign(res, flatten(v, key)); } else { res[key]=v; } } return res; }
+
+    // ==========================================================
+    // 4) UI: Agent list
+    // ==========================================================
+    function renderAgents(){
+      agentGrid.innerHTML='';
+      AGENTS.forEach(a=>{
+        const card = document.createElement('div');
+        card.className = 'agent-card';
+        card.innerHTML = `
+          <div class="agent-emoji">${a.emoji||'🤖'}</div>
+          <div>
+            <div class="agent-title">${a.name}</div>
+            <div class="agent-desc">${a.description||''}</div>
+          </div>`;
+        card.addEventListener('click', ()=> selectAgent(a.slug));
+        card.id = `agent-${a.slug}`;
+        agentGrid.appendChild(card);
+      });
+    }
+
+    async function selectAgent(slug){
+      activeAgent = AGENTS.find(a=>a.slug===slug) || null;
+      if(!activeAgent) return;
+
+      // mark active
+      document.querySelectorAll('.agent-card').forEach(el=> el.classList.remove('active'));
+      const ac = document.getElementById(`agent-${slug}`); if(ac) ac.classList.add('active');
+
+      sectionTitle.textContent = activeAgent.name;
+      sectionNote.textContent  = activeAgent.description || '';
+
+      // Load schema if missing
+      if(!activeAgent.schema){ activeAgent.schema = await tryFetchSchema(activeAgent.slug); }
+
+      // If still missing, synthesize a one-step schema from JSON schema properties if present
+      if(activeAgent.schema && !Array.isArray(activeAgent.schema) && activeAgent.schema.properties){
+        activeAgent.schema = [jsonSchemaToStep(activeAgent.schema)];
+      }
+
+      if(!Array.isArray(activeAgent.schema)){
+        // Safety: minimal textarea to avoid blank state
+        activeAgent.schema = [{ key:'inputs', title:'Inputs', fields:[{type:'textarea', name:'prompt', label:'Prompt', full:true}] }];
+      }
+
+      // restore saved progress
+      currentStep = 0;
+      state = loadAgentState(activeAgent.slug) || {};
+      renderStep();
+      updateProgressUI();
+    }
+
+    async function tryFetchSchema(slug){
+      const endpoints = [`/api/${slug}/schema`, `/api/${slug}/config`];
+      for(const url of endpoints){
+        try{ const r = await fetch(url); if(r.ok){ const data = await r.json(); return data.schema || data.input_schema || data.ui_schema || data; } }catch(e){}
+      }
+      return null;
+    }
+
+    function jsonSchemaToStep(schema){
+      const fields=[]; const props = schema.properties||{}; const req = new Set(schema.required||[]);
+      for(const [name, def] of Object.entries(props)){
+        const label = def.title || name;
+        const placeholder = def.description || '';
+        let type = 'text';
+        if(def.type==='string' && (def.format==='textarea' || (def['ui:widget']==='textarea'))) type='textarea';
+        else if(def.type==='string') type='text';
+        else if(def.type==='integer' || def.type==='number') type='number';
+        else if(def.type==='boolean') type='checkbox';
+        if(Array.isArray(def.enum)) type='select';
+        const field={type, name, label, placeholder, full:true};
+        if(type==='select') field.options = def.enum;
+        if(req.has(name)) field.required=true;
+        fields.push(field);
+      }
+      return { key:'inputs', title: schema.title || 'Inputs', note:schema.description||'', fields };
+    }
+
+    // ==========================================================
+    // 5) Stepper / fields rendering
+    // ==========================================================
+    let state = {}; // flat state per agent
+
+    function setVal(name, value){ state[name] = value; persistState(); updateProgressUI(); }
+    function getVal(name, fb=''){ return (state[name] ?? fb); }
+    function persistState(){ if(activeAgent) saveAgentState(activeAgent.slug, state); }
+
+    function renderStep(){
+      const s = activeAgent.schema[currentStep];
+      const total = activeAgent.schema.length;
+      sectionTitle.textContent = s.title || activeAgent.name;
+      sectionNote.textContent  = s.note || activeAgent.description || '';
+
+      // Fields
+      fieldsWrap.innerHTML='';
+      (s.fields||[]).forEach(f=> renderField(f, fieldsWrap));
+
+      // Controls
+      prevBtn.style.display = currentStep===0 ? 'none' : 'inline-flex';
+      nextBtn.style.display = currentStep < total-1 ? 'inline-flex' : 'none';
+      genBtn.style.display  = currentStep === total-1 ? 'inline-flex' : 'none';
+
+      // Progress
+      updateProgressUI();
+    }
+
+    function renderField(f, parent){
+      const wrap=document.createElement('div');
+      wrap.className='field'+(f.full?' full':'');
+      if(f.label){ const lab=document.createElement('label'); lab.textContent=f.label + (f.required?' *':''); wrap.appendChild(lab); }
+      let el=null; const val=getVal(f.name,'');
+      if(f.type==='textarea'){
+        el=document.createElement('textarea'); el.value=val||''; el.placeholder=f.placeholder||''; el.addEventListener('input',()=> setVal(f.name, el.value));
+      } else if(f.type==='select'){
+        el=document.createElement('select'); (f.options||[]).forEach(opt=>{ const o=document.createElement('option'); o.value=opt; o.textContent=opt; el.appendChild(o); }); el.value=val|| (f.options?.[0]||''); el.addEventListener('change',()=> setVal(f.name, el.value));
+      } else if(f.type==='number'){
+        el=document.createElement('input'); el.type='number'; el.value=val||''; el.placeholder=f.placeholder||''; el.addEventListener('input',()=> setVal(f.name, el.value));
+      } else if(f.type==='url'){
+        el=document.createElement('input'); el.type='url'; el.value=val||''; el.placeholder=f.placeholder||''; el.addEventListener('input',()=> setVal(f.name, el.value));
+      } else if(f.type==='checkbox'){
+        el=document.createElement('input'); el.type='checkbox'; el.checked=!!val; el.addEventListener('change',()=> setVal(f.name, el.checked));
+      } else {
+        el=document.createElement('input'); el.type='text'; el.value=val||''; el.placeholder=f.placeholder||''; el.addEventListener('input',()=> setVal(f.name, el.value));
+      }
+      el.name = f.name;
+      wrap.appendChild(el);
+
+      // optional helper action: sample/prefill per field
+      if(f.sample){ const b=document.createElement('button'); b.type='button'; b.textContent='Try sample'; b.className='btn ghost'; b.style.marginTop='6px'; b.addEventListener('click',()=>{ setVal(f.name,f.sample); el.value=f.sample; }); wrap.appendChild(b); }
+
+      parent.appendChild(wrap);
+    }
+
+    // ==========================================================
+    // 6) Navigation
+    // ==========================================================
+    prevBtn.addEventListener('click', ()=>{ if(currentStep>0){ currentStep--; renderStep(); }});
+    nextBtn.addEventListener('click', ()=>{ if(currentStep < activeAgent.schema.length-1){ currentStep++; renderStep(); }});
+    document.getElementById('saveBtn').addEventListener('click', ()=>{ persistState(); flash('Saved draft'); });
+
+    function updateProgressUI(){
+      const total = activeAgent?.schema?.length || 1; const p=((Math.min(currentStep+1,total))/total)*100; document.getElementById('progressBar').style.width=p+'%';
+      document.getElementById('progressText').textContent=`Step ${Math.min(currentStep+1,total)} of ${total}`;
+    }
+
+    // ==========================================================
+    // 7) Report pipeline
+    //    Sends { structured_input } to the agent endpoint.
+    //    Expects { markdown_report } or { reply } back.
+    // ==========================================================
+    const reportOverlay = document.getElementById('reportOverlay');
+    const reportContent = document.getElementById('reportContent');
+    const reportTitle   = document.getElementById('reportTitle');
+    const copyReport    = document.getElementById('copyReport');
+    const toggleDebug   = document.getElementById('toggleDebug');
+    const closeReport   = document.getElementById('closeReport');
+    const downloadMd    = document.getElementById('downloadMd');
+    let debugMode=false; window._lastRawReport=''; window._lastCleanedReport='';
+
+    genBtn.addEventListener('click', async ()=>{
+      if(!activeAgent) return;
+      const btn = genBtn; const old = btn.textContent; btn.disabled=true; btn.textContent='Generating…';
+
+      // Build structured input from flat state
+      const structured_input = deepify(state);
+
+      try{
+        const r = await fetch(activeAgent.endpoint || `/api/${activeAgent.slug}/chat`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ structured_input })
+        });
+        const data = await r.json();
+        // Accept several shapes
+        const md = String(
+          data.markdown_report ||
+          data.reply ||
+          data.content ||
+          (Array.isArray(data.report_sections) ? data.report_sections.join('\n\n') : '') ||
+          'No content.'
+        );
+        showReportOverlay(md, activeAgent.name);
+      }catch(e){
+        showReportOverlay(`# Error\n\nSorry, something went wrong.\n\n\`\`\`\n${String(e)}\n\`\`\``, activeAgent.name);
+      }finally{ btn.disabled=false; btn.textContent=old; }
+    });
+
+    function cleanMarkdown(md){ return String(md||'').trim(); }
+    function showReportOverlay(md, title){
+      reportContent.innerHTML='';
+      window._lastRawReport=String(md||'');
+      window._lastCleanedReport=cleanMarkdown(window._lastRawReport);
+      const rendered=document.createElement('div');
+      try{ rendered.innerHTML = marked.parse(window._lastCleanedReport); }catch{ rendered.textContent=window._lastCleanedReport; }
+      reportContent.appendChild(rendered);
+      const pre=document.createElement('pre'); pre.textContent=window._lastCleanedReport; reportContent.appendChild(pre);
+      debugMode=false; toggleDebug.textContent='Debug';
+      reportTitle.textContent = `${title} — Report`;
+      reportOverlay.style.display='flex'; reportOverlay.setAttribute('aria-hidden','false');
+    }
+    closeReport.addEventListener('click', ()=>{ reportOverlay.style.display='none'; reportOverlay.setAttribute('aria-hidden','true'); });
+    copyReport.addEventListener('click', ()=>{ const text = debugMode ? (window._lastRawReport||'') : (window._lastCleanedReport||''); navigator.clipboard.writeText(text).then(()=>{ copyReport.textContent='Copied!'; setTimeout(()=> copyReport.textContent='Copy', 1200); }); });
+    toggleDebug.addEventListener('click', ()=>{ if(!window._lastRawReport) return; reportContent.innerHTML=''; debugMode=!debugMode; const t = debugMode?window._lastRawReport:window._lastCleanedReport; const div=document.createElement('div'); try{ div.innerHTML=marked.parse(t); }catch{ div.textContent=t; } reportContent.appendChild(div); const pre=document.createElement('pre'); pre.textContent=t; reportContent.appendChild(pre); toggleDebug.textContent = debugMode ? 'Hide Debug' : 'Debug'; });
+    downloadMd.addEventListener('click', ()=>{ const blob = new Blob([window._lastCleanedReport||'' ], {type:'text/markdown'}); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='agent-report.md'; a.click(); URL.revokeObjectURL(url); });
+
+    // ==========================================================
+    // 8) Utilities
+    // ==========================================================
+    function flash(msg){ const b=document.createElement('div'); b.textContent=msg; b.style.position='fixed'; b.style.right='18px'; b.style.bottom='18px'; b.style.background='linear-gradient(135deg,#C6924A,#E1BA63)'; b.style.color='#111'; b.style.padding='10px 14px'; b.style.fontWeight='800'; b.style.borderRadius='10px'; b.style.boxShadow='0 20px 40px -10px rgba(225,186,99,.45)'; b.style.zIndex='200'; document.body.appendChild(b); setTimeout(()=>{ b.style.transition='opacity .25s'; b.style.opacity='0'; setTimeout(()=>b.remove(),250); }, 1200); }
+
+    // Mobile menu
+    const toggle = document.querySelector('.menu-toggle'); const menu = document.getElementById('menu'); toggle?.addEventListener('click', ()=>{ const open = menu.classList.toggle('open'); toggle.setAttribute('aria-expanded', open ? 'true' : 'false'); });
+
+    // Boot
+    document.getElementById('y').textContent = new Date().getFullYear();
+    discoverAgents();
+  </script>
+</body>
+</html>

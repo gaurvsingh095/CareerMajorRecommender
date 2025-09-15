@@ -1,0 +1,173 @@
+{
+  "course-major-recommender": {
+    "name": "AI Course & Major Recommender (Eller Edition)",
+    "description": "Ranks Eller BSBA majors from best to worst fit and returns a polished Markdown report with a chronological (Year 1–4) plan, electives, clubs, employers, and quick next steps.",
+    "model": "gpt-4o",
+    "temperature": 0.3,
+    "capabilities": { "webSearch": false, "scraping": false },
+    "input_mapping": {
+      "strengths": "a.strengths",
+      "goals": "a.goals",
+      "interests": "a.interests",
+      "experience": "b.experience",
+      "regions": "b.regions",
+      "constraints": "b.constraints"
+    },
+    "system_prompt": "You are the Eller Major Recommender. Use the rubric and major catalog below to (1) extract signals from the student's text, (2) score each major, (3) rank majors, and (4) write a polished Markdown report that includes Executive Summary, Intake Snapshot, Ranked Matches (table), a Year 1–4 Chronological Plan based on the top match, and concrete Next Steps. Never output raw JSON as the primary content. Use only the catalog provided. Entrepreneurship is scheduled in senior year only.",
+    "rubric": {
+      "notes": "Weighted additive model. Normalize to 0–100 per major.",
+      "weights": {
+        "keyword_signals": 0.40,
+        "skills_profile_fit": 0.30,
+        "evidence_bonus": 0.20,
+        "goal_alignment": 0.10
+      },
+      "signals": {
+        "tech_quant_terms_weight": 2,
+        "generic_terms_weight": 1,
+        "name_mention_bonus": 2,
+        "evidence": {
+          "internship_project_cert": 4,
+          "club_membership": 2,
+          "tools_sql_python_tableau": 3,
+          "leadership_role": 2
+        }
+      },
+      "skills_dimensions": [
+        "math_analytics",
+        "interpersonal_team",
+        "creative_ideas",
+        "rules_logic"
+      ],
+      "skills_scale": "0.0–1.0 where 1.0 means the major strongly expects that skill"
+    },
+    "catalog": {
+      "mis": {
+        "name": "Management Information Systems (MIS)",
+        "skills_profile": { "math_analytics": 0.70, "interpersonal_team": 0.55, "creative_ideas": 0.50, "rules_logic": 0.75 },
+        "keywords": ["mis","information systems","systems","database","databases","sql","python","java","coding","software","product","cloud","cyber","cybersecurity","ai","ml","data","analytics","it","technology","architecture","api","erp"],
+        "career_paths": ["Systems Analyst","Applications Developer","Database Manager","IT/IS Analyst","Network Administrator","Product/Business Systems Analyst"],
+        "employers": ["Amazon","Goldman Sachs","General Motors","JP Morgan","Insight","Honeywell","IBM","ADP","PetSmart","Cognizant","MGM","USAA","Oracle","Raytheon"],
+        "courses": ["Data Structures & Algorithms","Database Management Systems","Systems Security Management","Data Analytics","Social & Ethical Issues of the Internet"],
+        "clubs": ["Management Information Systems Association","Zipperman Scholars","Cyber Cats","Data Cats","Coding/Developer clubs"]
+      },
+      "ba": {
+        "name": "Business Analytics",
+        "skills_profile": { "math_analytics": 0.90, "interpersonal_team": 0.55, "creative_ideas": 0.55, "rules_logic": 0.70 },
+        "keywords": ["analytics","data","statistics","statistical","modeling","machine learning","ml","tableau","power bi","experiments","ab testing","sql","python","r","forecast","quant","data viz"],
+        "career_paths": ["Data & Analytics Consulting","Supply Chain Analytics","Marketing Analytics","Financial Analytics","Accounting Analytics","Product & Pricing Analysis"],
+        "employers": ["Deloitte","Goldman Sachs","Boston Consulting Group (BCG)","Johnson & Johnson","Salesforce","Amazon","Cisco","Wells Fargo","PepsiCo","FedEx","US Federal Reserve"],
+        "courses": ["Database Fundamentals for Business Analytics","Programming Fundamentals","Business Analytics Techniques","Data Visualization for Business","Prescriptive Analysis"],
+        "clubs": ["Management Information Systems Association","Zipperman Scholars","Marketing Students Association","Data/ML groups"]
+      },
+      "fin": {
+        "name": "Finance",
+        "skills_profile": { "math_analytics": 0.85, "interpersonal_team": 0.55, "creative_ideas": 0.50, "rules_logic": 0.80 },
+        "keywords": ["finance","investment","banking","ib","valuation","equity research","portfolio","trading","discounted cash flow","dcf","markets","hedge","risk","financial modeling","cfa"],
+        "career_paths": ["Corporate Finance","Operations","Commercial & Investment Banking","Financial Advising & Consulting","Real Estate","Sales & Trading"],
+        "employers": ["Goldman Sachs","Vanguard","Wells Fargo","JP Morgan","Chase","BDO","Comcast/NBC","Amazon","Siemens","Bank of America","Citigroup","ADP","CBRE"],
+        "courses": ["Quantitative Financial Management","Corporate Financial Problems","Risk Management and Derivatives","Financial Modeling","Bloomberg Certification","Investments"],
+        "clubs": ["Investments Club","Financial Management Association","Zipperman Scholars","Wall Street prep groups"]
+      },
+      "acc": {
+        "name": "Accounting",
+        "skills_profile": { "math_analytics": 0.60, "interpersonal_team": 0.55, "creative_ideas": 0.35, "rules_logic": 0.90 },
+        "keywords": ["accounting","audit","auditing","tax","cpa","bookkeeping","gaap","assurance","controls","financial reporting"],
+        "career_paths": ["Audit/Assurance","Tax Accounting","Consulting/Advisory","Corporate Accounting","Forensic Accounting","Financial Accountant/Analyst","Internal Auditor","Cost/Program Accountant"],
+        "employers": ["Bank of America","BDO","CIA","City of Tucson","Deloitte","EY","Goldman Sachs","HP","Honeywell","Intel","IRS","KPMG","Microsoft","PwC","Protiviti","Raytheon","Texas Instruments"],
+        "courses": ["Financial Accounting","Managerial Accounting","Federal Taxation","Accounting Information Systems","Information Quality & Assurance","Analysis of Financial Statements","Accounting for Non-Profits"],
+        "clubs": ["Beta Alpha Psi","Accounting Students Association"]
+      },
+      "mgmt": {
+        "name": "Business Management",
+        "skills_profile": { "math_analytics": 0.55, "interpersonal_team": 0.80, "creative_ideas": 0.60, "rules_logic": 0.55 },
+        "keywords": ["management","operations","leadership","project management","organizational","business development","hr","people","ops"],
+        "career_paths": ["Management Development Trainee","Project Management","Small Business Management","Regional Operations","Sales Apprenticeship","Hospitality Management","Business Development"],
+        "employers": ["Amazon","Banner Health","ADP","Insight Global","Altria","Enterprise","Macy’s","Quicken Loans","Raytheon","Target","Vanguard","Oracle","Yelp"],
+        "courses": ["Small Business Development & Consulting","Social Innovation Organizations","Business Law","Human Resources","Bargaining & Negotiation in Organizations","Health Care Organization & Management","Training & Development"],
+        "clubs": ["Eller Management Association","Students Consulting for Non-Profits","DECA","Sports Marketing Association"]
+      },
+      "mkt": {
+        "name": "Marketing",
+        "skills_profile": { "math_analytics": 0.50, "interpersonal_team": 0.80, "creative_ideas": 0.70, "rules_logic": 0.45 },
+        "keywords": ["marketing","brand","branding","social","social media","advertising","ads","seo","sem","content","copy","consumer","ux research","growth","go to market","gtm","public relations"],
+        "career_paths": ["Advertising/Promotions","Customer Service","Social Media Specialist/Manager","Product/Brand Manager","Event Planning","Market Research/Analytics","Public Relations","Sales & Sales Management"],
+        "employers": ["PepsiCo","Insight Global","E&J Gallo","General Mills","Goosehead Insurance","ADP","Dillard’s","Hershey","Fisher Investments","Ross"],
+        "courses": ["Digital Marketing","Pricing & Channels","Advertising Management","Sales Communications","Integrated Marketing Communications","International Marketing Management","Brand Management","Product Management"],
+        "clubs": ["AdCats","American Marketing Association","AdTeam","Business of Entertainment","DECA","Eller Sales Club","Social Media Club","Sports Marketing Association","Students Consulting for Non-Profits"]
+      },
+      "econ": {
+        "name": "Economics (BSBA or BA)",
+        "skills_profile": { "math_analytics": 0.80, "interpersonal_team": 0.55, "creative_ideas": 0.55, "rules_logic": 0.75 },
+        "keywords": ["economics","economist","policy","labor economics","trade theory","monetary economics","quantitative methods","market design"],
+        "career_paths": ["Financial Services","Operations","Consulting","Graduate School","Government/Non-Profit","Economic/Market Analysis"],
+        "employers": ["Amazon","Edward Jones","Bloomberg","Caesars Entertainment","Cyracom","Discover","Factset","Fisher Investments","Mercer","Vanguard","Texas Instruments"],
+        "courses": ["International Economics & Policy","Economics of Regulated Industries","Law & Economics","Labor Economics","International Trade Theory","Monetary Economics","Quantitative Methods for Economic Strategy"],
+        "clubs": ["Economics Society","Investments Club","Financial Management Association","Arizona Consulting Club"]
+      },
+      "oscm": {
+        "name": "Operations & Supply Chain Management",
+        "skills_profile": { "math_analytics": 0.65, "interpersonal_team": 0.60, "creative_ideas": 0.45, "rules_logic": 0.80 },
+        "keywords": ["operations","supply chain","inventory","quality control","production planning","process improvement","logistics","project management","materials management"],
+        "career_paths": ["Business Analyst","Production Planner","Operations Analyst","Materials Manager","Quality Control Specialist","Project Manager"],
+        "employers": ["America West Airlines","American Express","Amazon","Black & Decker","Cigna Healthcare","Gap Inc","General Electric","Newell/Rubbermaid","Nordstrom","Pepsi","Sherwin-Williams","Target","Starwood Hotels","Walgreens","Walmart Internal Audit"],
+        "courses": ["Production & Operations Management","Supply Chain & Logistics","Project Management","Managing Quality Improvement"],
+        "clubs": ["Educational Society for Resource Management","MIS Association"]
+      },
+      "entre": {
+        "name": "Entrepreneurship (Senior-Year Sequence)",
+        "skills_profile": { "math_analytics": 0.55, "interpersonal_team": 0.75, "creative_ideas": 0.85, "rules_logic": 0.55 },
+        "keywords": ["entrepreneurship","entrepreneur","startup","founder","venture","innovation","accelerator","incubator","pitch"],
+        "career_paths": ["Founder","Product Builder","Venture Fellow (intern)"],
+        "employers": ["Accelerators/Incubators","Early-stage startups","Venture studios"],
+        "courses": ["Venture Discovery","Prototyping & Validation","Launch Studio (capstone)"],
+        "clubs": ["Venture Studio","Entrepreneurship clubs","Hackathons"],
+        "policy": "Do not recommend as stand-alone for early semesters; schedule in senior year while building a marketable base major."
+      }
+    },
+    "scoring_instructions": "1) Build a lowercase token bag from strengths, goals, interests, experience, regions, constraints. 2) For each catalog major, sum keyword hits (tech/quant terms weigh 2x, generic 1x). 3) Add +2 per exact ID/name mention. 4) Evidence bonuses: add points when the text mentions internships, projects, certifications (SQL/Python/Tableau/Bloomberg), clubs, or leadership. 5) Skills fit: infer the student's skills from text using verbs/objects (e.g., 'built sql pipelines' -> math_analytics+rules_logic). Cosine-like similarity against the major's skills_profile. 6) Normalize major scores to 0–100 and rank.",
+    "constraints_logic": [
+      { "pattern": "(budget|\\$|scholarship|aid|cost|tuition)", "note": "Budget-aware: prioritize paid internships, campus jobs, departmental scholarships; minimize extra electives." },
+      { "pattern": "(accelerated|fast|3\\s*year|3-year|early grad)", "note": "Accelerated: use AP/CLEP, summer sessions, tight prereq planning with advisor." },
+      { "pattern": "(part\\s*time|part-time|work while studying|working)", "note": "Part-time: consider lighter terms; pick evening/online sections where possible." },
+      { "pattern": "(english|spanish|hindi|mandarin|german|french)", "note": "Language preference detected; consider related certificate/minor or short study-abroad." }
+    ],
+    "templates": {
+      "rank_table_header": "| # | Major | Match | Why |\n|---:|---|---:|---|",
+      "report_outline": [
+        "## Executive Summary",
+        "1–2 sentences on top match and why; mention 2nd/3rd if close.",
+        "## Intake Snapshot",
+        "**Strengths:** {{strengths}}\n**Goals:** {{goals}}\n**Interests:** {{interests}}\n**Experience:** {{experience}}\n**Regions:** {{regions}}\n**Constraints:** {{constraints}}",
+        "## Ranked Matches",
+        "Markdown table with rank, major name, % match, one-line why (signals that fired).",
+        "## Chronological Plan (Year 1–4) – built around top match",
+        "Year 1: foundations, tech/data literacy, exploration, career setup.",
+        "Year 2: core business, first major preview/tools, first project, summer internship.",
+        "Year 3: depth courses, analytics/tech elective, leadership, summer internship.",
+        "Year 4: capstone, advanced courses, entrepreneurship sequence if signaled, final portfolio, job-search sprints.",
+        "Include constraint notes if detected.",
+        "## Electives, Clubs & Employers to Target",
+        "Pull from catalog for the top match.",
+        "## Next-Step Actions",
+        "4–6 bullets: join two clubs this month; book advisor + student mentor; start 1–2 week project; resume/LinkedIn refresh; line up informational interviews."
+      ]
+    },
+    "conversation_starters": [
+      "Rank Eller majors for me based on my strengths and goals.",
+      "I like analytics and coding but also product/people work—what should I pick?",
+      "I’m between Finance and MIS; I have SQL + Tableau and did an operations internship."
+    ],
+    "output_contract": {
+      "format": "markdown_only",
+      "must_include_sections": [
+        "Executive Summary",
+        "Intake Snapshot",
+        "Ranked Matches",
+        "Chronological Plan (Year 1–4)",
+        "Electives, Clubs & Employers to Target",
+        "Next-Step Actions"
+      ]
+    }
+  }
+}

@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agent Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f111a;
+      --card: #1f1f2a;
+      --radius: 14px;
+      --transition: .25s cubic-bezier(.4,.2,.2,1);
+      --purple: #8f63f0;
+      --orange: rgb(255,111,60);
+      --accent: var(--orange);
+      --accent-alt: var(--purple);
+      --accent-gradient: linear-gradient(135deg, var(--orange) 0%, var(--purple) 100%);
+      --muted: rgba(255,255,255,.55);
+      --text: #ffffff;
+      --shadow: 0 30px 60px -10px rgba(255,111,60,.25);
+    }
+    *{box-sizing:border-box;}
+    body,html{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden;}
+    #wrapper{display:flex;height:100vh;overflow:hidden;}
+
+    /* Scrollbar styling */
+    *::-webkit-scrollbar { width:12px; }
+    *::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius:6px; }
+    *::-webkit-scrollbar-thumb {
+      background: var(--orange);
+      border-radius:6px;
+      border:3px solid rgba(0,0,0,0);
+      background-clip:padding-box;
+    }
+    /* Firefox */
+    * { scrollbar-color: var(--orange) rgba(255,255,255,0.08); }
+
+    /* Sidebar */
+    #sidebar{
+      width:260px;
+      background: linear-gradient(135deg,#1f1f2a 0%,#0f111a 100%);
+      display:flex;
+      flex-direction:column;
+      padding:16px 12px;
+      gap:12px;
+      border-right:1px solid rgba(255,255,255,.06);
+      flex-shrink:0;
+    }
+    #sidebar .title{
+      font-size:1.25rem;
+      font-weight:700;
+      margin-bottom:4px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    #agent-cards{
+      flex:1;
+      overflow-y:auto;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      padding-right:4px;
+    }
+    .agent-card{
+      background:var(--card);
+      border-radius:16px;
+      padding:16px;
+      position:relative;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      border:1px solid rgba(255,255,255,.07);
+      transition:transform var(--transition),box-shadow var(--transition),border-color var(--transition);
+      min-height:110px;
+    }
+    .agent-card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 25px 60px -5px rgba(143,99,240,.35),0 25px 60px -5px rgba(255,111,60,.25);
+      border-color:var(--orange);
+    }
+    .agent-card.active{
+      outline:2px solid var(--orange);
+      border-color:var(--orange);
+      box-shadow:0 30px 75px -5px rgba(255,111,60,.5);
+    }
+    .avatar{
+      width:52px;
+      height:52px;
+      border-radius:50%;
+      background:rgba(255,255,255,.06);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      font-weight:600;
+      color:#fff;
+    }
+    .agent-name{
+      margin-top:4px;
+      text-align:center;
+      font-weight:600;
+      font-size:0.85rem;
+      line-height:1.2;
+    }
+
+    /* Main */
+    #main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+    header{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px 24px;
+      border-bottom:1px solid rgba(255,255,255,.05);
+      flex-wrap:wrap;
+      background: linear-gradient(135deg, rgba(15,17,26,1) 0%, rgba(31,28,58,1) 100%);
+      flex-shrink:0;
+    }
+    header h1{
+      margin:0;
+      font-size:1.6rem;
+      font-weight:700;
+      flex:0 0 auto;
+      white-space:nowrap;
+      background: linear-gradient(90deg,var(--orange),#fff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .controls{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex:1;
+      min-width:0;
+    }
+    .agent-select-wrapper{
+      position:relative;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex:0 0 auto;
+    }
+    select#agent-select{
+      appearance:none;
+      background:#1f1f2a;
+      border:1px solid rgba(255,255,255,.1);
+      padding:12px 16px;
+      border-radius:8px;
+      color:var(--text);
+      font-size:1rem;
+      cursor:pointer;
+      min-width:260px;
+      transition:all var(--transition);
+      outline:none;
+    }
+    select#agent-select:hover{
+      box-shadow:0 0 16px rgba(255,111,60,.35);
+    }
+    .starter-hint{
+      font-size:.85rem;
+      color:rgba(255,255,255,.65);
+      overflow:hidden;
+      white-space:nowrap;
+      text-overflow:ellipsis;
+      flex:1;
+      min-width:0;
+    }
+    #statusLine{
+      font-size:.75rem;
+      color:var(--orange);
+      flex:0 0 auto;
+      white-space:nowrap;
+    }
+    #viewLastBtn{
+      padding:8px 16px;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.15);
+      border-radius:8px;
+      cursor:pointer;
+      font-size:12px;
+      font-weight:600;
+      color:#fff;
+      margin-left:8px;
+      flex:0 0 auto;
+      transition:background var(--transition);
+    }
+    #viewLastBtn:disabled{
+      opacity:.4;
+      cursor:not-allowed;
+    }
+    #viewLastBtn:hover:not(:disabled){
+      background: rgba(255,255,255,.12);
+    }
+
+    /* Prompt area */
+    #prompt-container{
+      width:100%;
+      padding:16px 24px;
+      display:flex;
+      justify-content:center;
+      background:rgba(255,255,255,0.005);
+      border-bottom:1px solid rgba(255,255,255,.06);
+      position:relative;
+      transition:all .3s;
+    }
+    #prompt-container.expanded{
+      padding:12px 36px;
+    }
+    .prompt-inner{
+      width:100%;
+      max-width:1200px;
+      background:rgba(31,28,58,0.95);
+      border-radius:16px;
+      padding:16px 20px;
+      display:flex;
+      gap:16px;
+      flex-wrap:wrap;
+      position:relative;
+      box-shadow:0 40px 80px -10px rgba(143,99,240,.25);
+    }
+    #expandToggle{
+      position:absolute;
+      top:6px;
+      right:8px;
+      cursor:pointer;
+      font-size:12px;
+      background:rgba(255,255,255,0.08);
+      padding:6px 12px;
+      border-radius:8px;
+      user-select:none;
+      font-weight:600;
+      color:#fff;
+      border:1px solid rgba(255,255,255,.1);
+      transition:background var(--transition);
+    }
+    #expandToggle:hover{
+      background:rgba(255,255,255,0.12);
+    }
+    .prompt-fields{
+      flex:1;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+    .prompt-field{
+      flex:1 1 300px;
+      min-width:220px;
+      display:flex;
+      flex-direction:column;
+    }
+    .prompt-field label{
+      font-size:10px;
+      margin-bottom:6px;
+      font-weight:600;
+      color:#ccc;
+    }
+    .prompt-field textarea,
+    .prompt-field input{
+      padding:14px 16px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.08);
+      background:#1f1f2a;
+      color:#fff;
+      font-size:14px;
+      outline:none;
+      resize: vertical;
+      width:100%;
+      transition:border var(--transition), box-shadow var(--transition);
+    }
+    .prompt-field textarea:focus,
+    .prompt-field input:focus{
+      border:1px solid var(--orange);
+      box-shadow:0 0 20px rgba(255,111,60,.3);
+    }
+
+    /* Step/pagination controls */
+    .step-controls{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-top:8px;
+      flex-wrap:wrap;
+      width:100%;
+    }
+    .step-indicator{
+      font-size:.85rem;
+      font-weight:600;
+      background: rgba(255,255,255,.05);
+      padding:6px 14px;
+      border-radius:8px;
+      flex:0 0 auto;
+    }
+    .step-btn{
+      padding:12px 22px;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:14px;
+      min-width:110px;
+      transition:filter .2s, transform .2s;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .step-btn.primary{
+      background: var(--accent-gradient);
+      color:#fff;
+    }
+    .step-btn.secondary{
+      background: rgba(255,255,255,.08);
+      color:#fff;
+    }
+    .step-btn:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+    }
+
+    /* Chat area */
+    #chat-wrapper{flex:1;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+    #chatWindow{
+      flex:1;
+      padding:18px 24px;
+      overflow-y:auto;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      position:relative;
+      scrollbar-width:thin;
+    }
+    .message{
+      max-width:75%;
+      padding:18px 22px;
+      border-radius:14px;
+      position:relative;
+      line-height:1.45;
+      font-size:15px;
+      word-break:break-word;
+      display:inline-block;
+      white-space:pre-wrap;
+      background:#1f223a;
+      box-shadow:0 18px 50px -5px rgba(0,0,0,.4);
+      transition:background var(--transition);
+    }
+    .message.user{
+      align-self:flex-end;
+      background: linear-gradient(135deg,var(--orange),var(--purple));
+      color:#fff;
+    }
+    .message.bot{
+      align-self:flex-start;
+      background:#1d1f33;
+      color:#fff;
+    }
+    .typing-indicator{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      padding:10px 14px;
+      background:#1d1f33;
+      border-radius:14px;
+      width:130px;
+    }
+    .dot{
+      width:8px;
+      height:8px;
+      background:var(--orange);
+      border-radius:50%;
+      animation:blink 1.4s infinite both;
+    }
+    .dot:nth-child(2){animation-delay:.2s;}
+    .dot:nth-child(3){animation-delay:.4s;}
+    @keyframes blink{
+      0%,80%,100%{opacity:.3;transform:translateY(0);}
+      40%{opacity:1;transform:translateY(-4px);}
+    }
+
+    /* Skeleton */
+    #skeletonOverlay{
+      position:fixed;
+      inset:0;
+      background:rgba(15,17,26,.97);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:16px;
+      z-index:50;
+      color:#fff;
+    }
+    .pulse{
+      background:rgba(255,255,255,.07);
+      border-radius:8px;
+      position:relative;
+    }
+    .pulse::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.15) 50%,rgba(255,255,255,0) 100%);
+      transform:translateX(-100%);
+      animation:shimmer 1.8s infinite;
+    }
+    @keyframes shimmer{to{transform:translateX(100%);}}
+
+    /* Report overlay */
+    #reportOverlay{
+      position:fixed;
+      inset:0;
+      background:rgba(15,17,26,.95);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      z-index:100;
+    }
+    #reportBox{
+      background: #1f213d;
+      border-radius:16px;
+      max-width:1100px;
+      width:100%;
+      max-height:90vh;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      box-shadow:0 50px 100px -10px rgba(255,111,60,.5);
+    }
+    #reportHeader{
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      padding:16px 24px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      gap:12px;
+    }
+    #reportHeader h2{
+      margin:0;
+      font-size:1.4rem;
+      font-weight:700;
+      background: linear-gradient(90deg,var(--orange),var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    #reportActions{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .report-btn{
+      padding:10px 16px;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:14px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      transition:filter .2s;
+    }
+    .report-btn.copy{ background: rgba(255,255,255,.08); color:#fff; }
+    .report-btn.close{ background: var(--accent); color:#fff; }
+    .report-btn:hover{ filter:brightness(1.05); }
+    #reportContent{
+      flex:1;
+      overflow:auto;
+      padding:20px 28px;
+      background: #0f111a;
+    }
+    #reportContent pre{
+      background: rgba(255,255,255,.04);
+      padding:16px;
+      border-radius:10px;
+      overflow:auto;
+      font-size:14px;
+      white-space:pre-wrap;
+    }
+
+    /* Responsive */
+    @media (max-width:1100px){
+      .prompt-inner{flex-direction:column;}
+      .prompt-field{flex:1 1 100%;}
+      .agent-card{min-height:90px;}
+      #sidebar{width:220px;}
+      header{flex-wrap:wrap;}
+      #reportBox{max-width:90vw;}
+    }
+  </style>
+</head>
+<body>
+  <div id="wrapper">
+    <!-- Sidebar -->
+    <div id="sidebar">
+      <div class="title">Agents</div>
+      <div id="agent-cards" aria-label="Agent selection cards">
+        <!-- populated -->
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div id="main">
+      <header>
+        <h1>Agent Chat</h1>
+        <div class="controls">
+          <div class="agent-select-wrapper">
+            <label for="agent-select" style="font-size:.9rem; margin-right:6px; white-space:nowrap;">Choose agent:</label>
+            <select id="agent-select" aria-label="Select agent"></select>
+          </div>
+          <div class="starter-hint" id="starterHint">Loading starters...</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div id="statusLine">Initializing...</div>
+          <button id="viewLastBtn" disabled title="Reopen last report">View Last Report</button>
+        </div>
+      </header>
+
+      <!-- Prompt -->
+      <div id="prompt-container">
+        <div class="prompt-inner" aria-label="Prompt form container">
+          <div id="expandToggle">Expand</div>
+          <!-- dynamic form will be inserted here -->
+        </div>
+      </div>
+
+      <!-- Chat -->
+      <div id="chat-wrapper">
+        <div id="chatWindow" aria-label="Chat window"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skeleton -->
+  <div id="skeletonOverlay">
+    <div style="display:flex;gap:12px;align-items:center;">
+      <div class="pulse" style="width:160px;height:160px;border-radius:14px;"></div>
+      <div class="pulse" style="width:160px;height:160px;border-radius:14px;"></div>
+      <div class="pulse" style="width:160px;height:160px;border-radius:14px;"></div>
+    </div>
+    <div class="pulse" style="width:60%;height:24px;border-radius:6px;"></div>
+    <div class="pulse" style="width:40%;height:18px;border-radius:6px;"></div>
+    <div style="display:flex;gap:8px;">
+      <div class="pulse" style="width:100px;height:40px;border-radius:8px;"></div>
+      <div class="pulse" style="width:100px;height:40px;border-radius:8px;"></div>
+    </div>
+    <div style="font-size:0.9rem;">Loading agents and initializing chat…</div>
+  </div>
+
+  <!-- Report Overlay -->
+  <div id="reportOverlay" aria-hidden="true">
+    <div id="reportBox">
+      <div id="reportHeader">
+        <div>
+          <h2>Generated Report</h2>
+        </div>
+        <div id="reportActions">
+          <button class="report-btn copy" id="copyReport">Copy</button>
+          <button class="report-btn close" id="closeReport">Close</button>
+        </div>
+      </div>
+      <div id="reportContent">
+        <!-- rendered markdown & raw -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Agent ordering & display names
+    const AGENT_ORDER = [
+      { key: 'course-major-recommender', display: 'AI Course & Major Recommender' },
+      { key: 'course-country-matcher', display: 'Course & Country Matcher' },
+      { key: 'ielts-speaking-simulator', display: 'IELTS Speaking Simulator' },
+      { key: 'ielts-writing-evaluator', display: 'IELTS Writing Evaluator' },
+      { key: 'essay-lor-reviewer', display: 'Essay & LOR Reviewer' },
+      { key: 'scholarship-finder', display: 'Scholarship Finder' },
+      { key: 'pre-departure-orientation', display: 'Pre-Departure & Onboarding Orientation Assistant' },
+      { key: 'housing-locator-agent', display: 'Student Housing Locator' },
+      { key: 'visa-interview-coach', display: 'Visa Interview Simulator' },
+      { key: 'ai-university-shortlister', display: 'University Shortlister' }
+    ];
+
+    let AGENTS = {};
+    let currentAgent = null;
+    let chatHistory = [];
+    let isSending = false;
+    let lastReportMarkdown = '';
+    const ANSWER_CACHE = {}; // per-agent stored answers
+    const PAGINATION_STATE = { currentStep: 0, questionsPerPage: 3 };
+
+    const skeleton = document.getElementById('skeletonOverlay');
+    const agentSelect = document.getElementById('agent-select');
+    const starterHint = document.getElementById('starterHint');
+    const chatWindow = document.getElementById('chatWindow');
+    const statusLine = document.getElementById('statusLine');
+    const agentCardsContainer = document.getElementById('agent-cards');
+    const promptInner = document.querySelector('.prompt-inner');
+    const expandToggle = document.getElementById('expandToggle');
+    const reportOverlay = document.getElementById('reportOverlay');
+    const reportContent = document.getElementById('reportContent');
+    const closeReport = document.getElementById('closeReport');
+    const copyReport = document.getElementById('copyReport');
+    const viewLastBtn = document.getElementById('viewLastBtn');
+
+    const AGENT_QUESTION_SETS = {
+      "sop-builder-optimizer": {
+        title: "Statement of Purpose Builder",
+        questions: [
+          { id: "academic_background", label: "Academic background & highlights", placeholder: "E.g., GPA, key subjects, awards" },
+          { id: "career_goals", label: "Career goals (short & long term)", placeholder: "What do you want to achieve?" },
+          { id: "program_reason", label: "Why this program and country?", placeholder: "Why this fit for you?" },
+          { id: "experience", label: "Relevant projects / internships", placeholder: "Describe past work or projects" },
+          { id: "personal_story", label: "Personal motivation / story", placeholder: "What makes you unique?" },
+          { id: "target_details", label: "Target university / program", placeholder: "E.g., MS CS at Cambridge" }
+        ]
+      },
+      "course-major-recommender": {
+        title: "Course & Major Recommender",
+        questions: [
+          { id: "academic_background", label: "Academic strengths (subjects, grades)", placeholder: "E.g., strong in math, 3.8 GPA in science" },
+          { id: "career_goals", label: "Career goals", placeholder: "E.g., entrepreneurship in AI, data analytics" },
+          { id: "interests", label: "Interests & hobbies", placeholder: "E.g., coding, statistics, design" },
+          { id: "experience", label: "Relevant experience", placeholder: "Internships, projects, certifications" },
+          { id: "preferred_regions", label: "Preferred countries / regions", placeholder: "E.g., USA, Germany, Canada" },
+          { id: "constraints", label: "Other constraints or preferences", placeholder: "Budget, language, timeline, etc." }
+        ]
+      },
+      "course-country-matcher": {
+        title: "Course & Country Matcher",
+        questions: [
+          { id: "career_goal", label: "Career goal", placeholder: "E.g., work in AI, biotech research" },
+          { id: "field_of_interest", label: "Field / major interest", placeholder: "E.g., Data Science, Business Analytics" },
+          { id: "preferred_region", label: "Preferred region or climate", placeholder: "E.g., Europe, English-speaking, warm" },
+          { id: "budget", label: "Budget range (USD)", placeholder: "E.g., 20000 per year" },
+          { id: "priorities", label: "Priorities (visa, PR, cost, etc.)", placeholder: "E.g., post-study work > affordability" },
+          { id: "additional", label: "Additional notes", placeholder: "Any other nuance or preference" }
+        ]
+      },
+      "pre-departure-orientation": {
+        title: "Pre-Departure Orientation",
+        questions: [
+          { id: "destination", label: "Destination country / city", placeholder: "E.g., Canada, Toronto" },
+          { id: "arrival_date", label: "Arrival date or intake month", placeholder: "E.g., September 2025" },
+          { id: "accommodation", label: "Type of accommodation", placeholder: "Dorm, off-campus, host family" },
+          { id: "dietary", label: "Dietary or cultural restrictions", placeholder: "E.g., vegetarian, halal" },
+          { id: "first_time", label: "First-time traveler? (Y/N)", placeholder: "Y or N" },
+          { id: "language", label: "Preferred guidance language", placeholder: "E.g., English, Hindi (optional)" }
+        ]
+      },
+      "housing-locator-agent": {
+        title: "Housing Locator",
+        questions: [
+          { id: "city_university", label: "Destination / University location", placeholder: "E.g., UC Berkeley, downtown Toronto" },
+          { id: "budget", label: "Monthly rent budget", placeholder: "E.g., $800" },
+          { id: "accommodation_type", label: "Type of accommodation", placeholder: "Shared apartment, dorm, studio" },
+          { id: "lifestyle", label: "Lifestyle preferences", placeholder: "Quiet, social, vegetarian-friendly" },
+          { id: "move_in", label: "Desired move-in timeframe", placeholder: "E.g., August 2025" },
+          { id: "other", label: "Other constraints", placeholder: "E.g., near public transit" }
+        ]
+      }
+    };
+
+    async function loadAgents() {
+      try {
+        const res = await fetch('/api/config');
+        AGENTS = await res.json();
+      } catch (e) {
+        console.error("Failed to fetch config", e);
+        statusLine.textContent = 'Failed to load agents.';
+        return;
+      }
+      populateDropdown();
+      populateCards();
+      for (const a of AGENT_ORDER) {
+        if (AGENTS[a.key]) { selectAgent(a.key); break; }
+      }
+      if (!currentAgent) {
+        const first = Object.keys(AGENTS)[0];
+        if (first) selectAgent(first);
+      }
+      setTimeout(()=>{ skeleton.style.display='none'; }, 300);
+    }
+
+    function populateDropdown() {
+      agentSelect.innerHTML = '';
+      AGENT_ORDER.forEach(obj => {
+        if (AGENTS[obj.key]) {
+          const opt = document.createElement('option');
+          opt.value = obj.key;
+          opt.textContent = obj.display;
+          agentSelect.appendChild(opt);
+        }
+      });
+      Object.keys(AGENTS).forEach(k => {
+        if (!AGENT_ORDER.find(o=>o.key===k)) {
+          const opt = document.createElement('option');
+          opt.value = k;
+          opt.textContent = AGENTS[k].name || k;
+          agentSelect.appendChild(opt);
+        }
+      });
+      agentSelect.onchange = () => { selectAgent(agentSelect.value); };
+    }
+
+    function populateCards() {
+      agentCardsContainer.innerHTML = '';
+      AGENT_ORDER.forEach(obj => {
+        if (!AGENTS[obj.key]) return;
+        const card = document.createElement('div');
+        card.className = 'agent-card';
+        card.dataset.agentKey = obj.key;
+        card.setAttribute('role','button');
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar';
+        const parts = obj.display.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+        avatar.textContent = parts;
+        const nameEl = document.createElement('div');
+        nameEl.className = 'agent-name';
+        nameEl.textContent = obj.display;
+        card.appendChild(avatar);
+        card.appendChild(nameEl);
+        card.addEventListener('click', () => selectAgent(obj.key));
+        agentCardsContainer.appendChild(card);
+      });
+      Object.keys(AGENTS).forEach(k => {
+        if (AGENT_ORDER.find(o=>o.key===k)) return;
+        const displayName = AGENTS[k].name || k;
+        const card = document.createElement('div');
+        card.className = 'agent-card';
+        card.dataset.agentKey = k;
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar';
+        avatar.textContent = displayName.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+        const nameEl = document.createElement('div');
+        nameEl.className = 'agent-name';
+        nameEl.textContent = displayName;
+        card.appendChild(avatar);
+        card.appendChild(nameEl);
+        card.addEventListener('click', () => selectAgent(k));
+        agentCardsContainer.appendChild(card);
+      });
+    }
+
+    function highlightActiveCard() {
+      document.querySelectorAll('.agent-card').forEach(c => {
+        if (c.dataset.agentKey === currentAgent) c.classList.add('active');
+        else c.classList.remove('active');
+      });
+    }
+
+    function updateStarterHint() {
+      const starters = AGENTS[currentAgent]?.conversation_starters || [];
+      if (starters.length) {
+        starterHint.textContent = `Try: ${starters.slice(0,3).join(' | ')}`;
+      } else {
+        starterHint.textContent = '';
+      }
+    }
+
+    function appendChatBubble(text, role) {
+      const msg = document.createElement('div');
+      msg.className = 'message ' + (role === 'user' ? 'user' : 'bot');
+      let inner = '';
+      if (typeof text === 'string') {
+        try {
+          inner = marked.parse(text);
+        } catch (e) {
+          inner = `<pre>${escapeHtml(text)}</pre>`;
+        }
+      } else {
+        const serialized = JSON.stringify(text, null, 2);
+        try {
+          inner = marked.parse(serialized);
+        } catch {
+          inner = `<pre>${escapeHtml(serialized)}</pre>`;
+        }
+      }
+      msg.innerHTML = inner;
+      chatWindow.appendChild(msg);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]); });
+    }
+
+    function showTypingIndicator() {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'typing-indicator';
+      wrapper.id = 'typingIndicator';
+      wrapper.innerHTML = `
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      `;
+      chatWindow.appendChild(wrapper);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+      const el = document.getElementById('typingIndicator');
+      if (el) el.remove();
+    }
+
+    async function selectAgent(agentKey) {
+      if (!AGENTS[agentKey]) return;
+      currentAgent = agentKey;
+      agentSelect.value = agentKey;
+      chatHistory = [];
+      chatWindow.innerHTML = '';
+      statusLine.textContent = `Using: ${getDisplayName(agentKey)}`;
+      updateStarterHint();
+      highlightActiveCard();
+      if (!ANSWER_CACHE[agentKey]) ANSWER_CACHE[agentKey] = {};
+      PAGINATION_STATE.currentStep = 0;
+      renderQuestionForm();
+    }
+
+    function getDisplayName(key) {
+      const ordered = AGENT_ORDER.find(o => o.key === key);
+      if (ordered) return ordered.display;
+      return AGENTS[key]?.name || key;
+    }
+
+    function renderQuestionForm() {
+      promptInner.innerHTML = '';
+      const template = AGENT_QUESTION_SETS[currentAgent];
+      if (!template) {
+        const fallbackWrapper = document.createElement('div');
+        fallbackWrapper.style.display = 'flex';
+        fallbackWrapper.style.flex = '1';
+        fallbackWrapper.style.gap = '12px';
+        fallbackWrapper.style.alignItems = 'center';
+        const inputWrapper = document.createElement('div');
+        inputWrapper.style.flex = '1';
+        const label = document.createElement('label');
+        label.textContent = 'Message';
+        label.style.fontSize = '12px';
+        label.style.marginBottom = '6px';
+        label.style.fontWeight = '600';
+        label.style.display = 'block';
+        const textarea = document.createElement('textarea');
+        textarea.id = 'chatInput';
+        textarea.rows = 4;
+        textarea.placeholder = (AGENTS[currentAgent]?.conversation_starters || ['Type a message...'])[0];
+        textarea.style.width = '100%';
+        textarea.style.borderRadius = '10px';
+        textarea.style.border = '1px solid rgba(255,255,255,.08)';
+        textarea.style.background = '#1f1f2a';
+        textarea.style.color = '#fff';
+        textarea.style.fontSize = '14px';
+        textarea.style.padding = '16px';
+        textarea.style.resize = 'vertical';
+        textarea.style.outline = 'none';
+        textarea.addEventListener('keypress', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendStructured(); }});
+        inputWrapper.appendChild(label);
+        inputWrapper.appendChild(textarea);
+        const sendBtn = document.createElement('button');
+        sendBtn.className = 'step-btn primary';
+        sendBtn.textContent = 'Send';
+        sendBtn.addEventListener('click', sendStructured);
+        fallbackWrapper.appendChild(inputWrapper);
+        fallbackWrapper.appendChild(sendBtn);
+        promptInner.appendChild(fallbackWrapper);
+        return;
+      }
+      buildStepUI(template);
+    }
+
+    function buildStepUI(template) {
+      promptInner.innerHTML = '';
+      const questions = template.questions;
+      const perPage = PAGINATION_STATE.questionsPerPage;
+      const totalSteps = Math.ceil(questions.length / perPage);
+      const step = PAGINATION_STATE.currentStep;
+
+      const titleDiv = document.createElement('div');
+      titleDiv.style.flexBasis = '100%';
+      titleDiv.style.marginBottom = '4px';
+      titleDiv.innerHTML = `<div style="font-weight:700;font-size:1rem; margin-bottom:4px;">${template.title}</div>`;
+
+      const fieldsContainer = document.createElement('div');
+      fieldsContainer.className = 'prompt-fields';
+      fieldsContainer.style.flex = '1';
+
+      const startIdx = step * perPage;
+      const endIdx = Math.min(startIdx + perPage, questions.length);
+      const currentSlice = questions.slice(startIdx, endIdx);
+
+      currentSlice.forEach(q => {
+        const field = document.createElement('div');
+        field.className = 'prompt-field';
+        field.style.flex = '1 1 100%';
+        const label = document.createElement('label');
+        label.textContent = q.label;
+        const textarea = document.createElement('textarea');
+        textarea.id = `q_${q.id}`;
+        textarea.placeholder = q.placeholder;
+        textarea.rows = 4;
+        if (ANSWER_CACHE[currentAgent] && ANSWER_CACHE[currentAgent][q.id]) {
+          textarea.value = ANSWER_CACHE[currentAgent][q.id];
+        }
+        textarea.addEventListener('input', () => {
+          if (!ANSWER_CACHE[currentAgent]) ANSWER_CACHE[currentAgent] = {};
+          ANSWER_CACHE[currentAgent][q.id] = textarea.value;
+        });
+        field.appendChild(label);
+        field.appendChild(textarea);
+        fieldsContainer.appendChild(field);
+      });
+
+      const controls = document.createElement('div');
+      controls.className = 'step-controls';
+
+      const indicator = document.createElement('div');
+      indicator.className = 'step-indicator';
+      indicator.textContent = `Step ${step + 1} of ${totalSteps}`;
+
+      const backBtn = document.createElement('button');
+      backBtn.className = 'step-btn secondary';
+      backBtn.textContent = 'Back';
+      backBtn.disabled = step === 0;
+      backBtn.addEventListener('click', () => {
+        if (PAGINATION_STATE.currentStep > 0) {
+          PAGINATION_STATE.currentStep--;
+          buildStepUI(template);
+        }
+      });
+
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'step-btn primary';
+      nextBtn.textContent = step + 1 === totalSteps ? 'Generate Report' : 'Continue';
+      nextBtn.addEventListener('click', () => {
+        if (step + 1 === totalSteps) {
+          sendStructured();
+        } else {
+          PAGINATION_STATE.currentStep++;
+          buildStepUI(template);
+        }
+      });
+
+      controls.appendChild(indicator);
+      controls.appendChild(backBtn);
+      controls.appendChild(nextBtn);
+
+      promptInner.appendChild(titleDiv);
+      promptInner.appendChild(fieldsContainer);
+      promptInner.appendChild(controls);
+    }
+
+    function buildStructuredPrompt(agentKey) {
+      const template = AGENT_QUESTION_SETS[agentKey];
+      if (!template) {
+        const ta = document.getElementById('chatInput');
+        return ta ? ta.value.trim() : '';
+      }
+      const answers = {};
+      template.questions.forEach(q => {
+        answers[q.id] = (ANSWER_CACHE[agentKey] && ANSWER_CACHE[agentKey][q.id]) ? ANSWER_CACHE[agentKey][q.id] : '';
+      });
+      const anyFilled = Object.values(answers).some(v => v && v.trim());
+      if (!anyFilled) return '';
+
+      let prompt = '';
+      if (agentKey === 'sop-builder-optimizer') {
+        prompt += `Academic background & highlights: ${answers.academic_background}\n`;
+        prompt += `Career goals: ${answers.career_goals}\n`;
+        prompt += `Why this program and country: ${answers.program_reason}\n`;
+        prompt += `Relevant experience: ${answers.experience}\n`;
+        prompt += `Personal story/motivation: ${answers.personal_story}\n`;
+        prompt += `Target university/program: ${answers.target_details}\n`;
+      } else if (agentKey === 'course-major-recommender') {
+        prompt += `Academic strengths: ${answers.academic_background}\n`;
+        prompt += `Career goals: ${answers.career_goals}\n`;
+        prompt += `Interests & hobbies: ${answers.interests}\n`;
+        prompt += `Experience: ${answers.experience}\n`;
+        prompt += `Preferred regions: ${answers.preferred_regions}\n`;
+        prompt += `Other constraints/preferences: ${answers.constraints}\n`;
+      } else if (agentKey === 'course-country-matcher') {
+        prompt += `Career goal: ${answers.career_goal}\n`;
+        prompt += `Field/major of interest: ${answers.field_of_interest}\n`;
+        prompt += `Preferred region/climate: ${answers.preferred_region}\n`;
+        prompt += `Budget: ${answers.budget}\n`;
+        prompt += `Priorities: ${answers.priorities}\n`;
+        prompt += `Additional notes: ${answers.additional}\n`;
+      } else if (agentKey === 'pre-departure-orientation') {
+        prompt += `Destination: ${answers.destination}\n`;
+        prompt += `Arrival date/intake: ${answers.arrival_date}\n`;
+        prompt += `Accommodation preference: ${answers.accommodation}\n`;
+        prompt += `Dietary / cultural restrictions: ${answers.dietary}\n`;
+        prompt += `First-time traveler: ${answers.first_time}\n`;
+        prompt += `Preferred language: ${answers.language}\n`;
+      } else if (agentKey === 'housing-locator-agent') {
+        prompt += `Location / University: ${answers.city_university}\n`;
+        prompt += `Budget (monthly): ${answers.budget}\n`;
+        prompt += `Accommodation type: ${answers.accommodation_type}\n`;
+        prompt += `Lifestyle preferences: ${answers.lifestyle}\n`;
+        prompt += `Move-in timeframe: ${answers.move_in}\n`;
+        prompt += `Other constraints: ${answers.other}\n`;
+      } else {
+        for (const [k, v] of Object.entries(answers)) {
+          prompt += `${k.replace(/_/g,' ')}: ${v}\n`;
+        }
+      }
+      return prompt.trim();
+    }
+
+    async function sendStructured() {
+      if (isSending) return;
+      if (!currentAgent) return;
+      const structuredPrompt = buildStructuredPrompt(currentAgent);
+      if (!structuredPrompt) {
+        appendChatBubble("Please fill at least one field before generating.", 'bot');
+        return;
+      }
+      isSending = true;
+      appendChatBubble(structuredPrompt, 'user');
+      chatHistory.push({ role: 'user', content: structuredPrompt });
+      setStatus('Generating report...');
+      showTypingIndicator();
+      try {
+        const res = await fetch(`/api/${encodeURIComponent(currentAgent)}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({ message: structuredPrompt, history: chatHistory, structured_input: (() => {
+            // Build structured input object to send explicitly
+            const template = AGENT_QUESTION_SETS[currentAgent];
+            if (!template) return {};
+            const obj = {};
+            template.questions.forEach(q => {
+              obj[q.id] = (ANSWER_CACHE[currentAgent] && ANSWER_CACHE[currentAgent][q.id]) ? ANSWER_CACHE[currentAgent][q.id] : '';
+            });
+            return obj;
+          })() })
+        });
+        const data = await res.json();
+        const reply = data.reply || data.error || '[no reply]';
+        // Normalize markdown_report
+        let markdownReportRaw = data.markdown_report || reply;
+        let markdownReport;
+        if (typeof markdownReportRaw === 'string') {
+          markdownReport = markdownReportRaw;
+        } else {
+          try {
+            markdownReport = JSON.stringify(markdownReportRaw, null, 2);
+          } catch {
+            markdownReport = String(markdownReportRaw);
+          }
+        }
+        removeTypingIndicator();
+        chatHistory.push({ role: 'assistant', content: reply });
+        setStatus('Received report');
+        lastReportMarkdown = markdownReport;
+        viewLastBtn.disabled = false;
+        showReportOverlay(markdownReport);
+      } catch (err) {
+        removeTypingIndicator();
+        appendChatBubble('Error: ' + (err.message || 'Failed to fetch'), 'bot');
+        setStatus('Error');
+        console.error(err);
+      } finally {
+        isSending = false;
+      }
+    }
+
+    function setStatus(txt) {
+      statusLine.textContent = txt;
+    }
+
+    function showReportOverlay(markdownText) {
+      reportContent.innerHTML = '';
+
+      if (typeof markdownText !== 'string') {
+        try {
+          markdownText = JSON.stringify(markdownText, null, 2);
+        } catch (e) {
+          markdownText = String(markdownText);
+        }
+      }
+      lastReportMarkdown = markdownText;
+      viewLastBtn.disabled = false;
+
+      const renderedWrapper = document.createElement('div');
+      try {
+        renderedWrapper.innerHTML = marked.parse(markdownText);
+      } catch (e) {
+        // fallback if marked fails
+        renderedWrapper.innerHTML = `<pre>${escapeHtml(markdownText)}</pre>`;
+      }
+      reportContent.appendChild(renderedWrapper);
+
+      // Collapsible raw markdown section
+      const rawContainer = document.createElement('div');
+      rawContainer.style.marginTop = '16px';
+      const rawLabel = document.createElement('div');
+      rawLabel.textContent = 'Raw Markdown (for copy/paste):';
+      rawLabel.style.marginBottom = '6px';
+      rawLabel.style.fontSize = '12px';
+      rawLabel.style.opacity = '0.8';
+      const pre = document.createElement('pre');
+      pre.textContent = markdownText;
+      rawContainer.appendChild(rawLabel);
+      rawContainer.appendChild(pre);
+      reportContent.appendChild(rawContainer);
+
+      reportOverlay.style.display = 'flex';
+      reportOverlay.setAttribute('aria-hidden','false');
+    }
+
+    closeReport.addEventListener('click', () => {
+      reportOverlay.style.display = 'none';
+      reportOverlay.setAttribute('aria-hidden','true');
+    });
+
+    copyReport.addEventListener('click', () => {
+      const toCopy = lastReportMarkdown || '';
+      navigator.clipboard.writeText(toCopy).then(() => {
+        copyReport.textContent = 'Copied!';
+        setTimeout(()=>{ copyReport.textContent='Copy'; }, 1200);
+      });
+    });
+
+    viewLastBtn.addEventListener('click', () => {
+      if (lastReportMarkdown) {
+        showReportOverlay(lastReportMarkdown);
+      }
+    });
+
+    expandToggle?.addEventListener('click', () => {
+      const container = document.getElementById('prompt-container');
+      if (container.classList.contains('expanded')) {
+        container.classList.remove('expanded');
+        expandToggle.textContent = 'Expand';
+      } else {
+        container.classList.add('expanded');
+        expandToggle.textContent = 'Collapse';
+      }
+    });
+
+    // Keyboard support: submit on Ctrl+Enter when on final step
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        if (currentAgent) sendStructured();
+      }
+    });
+
+    // initialize
+    loadAgents();
+  </script>
+</body>
+</html>

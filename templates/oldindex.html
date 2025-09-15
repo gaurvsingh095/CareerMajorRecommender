@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Key‑VΦid • Eller Major Recommender (Onyx + Gold)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    /* =========================
+       Onyx + Gold design system
+       ========================= */
+    :root{
+      --gold-1:#E1BA63; --gold-2:#C6924A; --gold-3:#8B6B2E;
+      --bg:#0B0C0E; --panel:#111317; --panel-2:#14171C;
+      --ink:#ECEDEF; --muted:#B9BDC7; --ring:rgba(225,186,99,.35);
+      --radius:18px; --nav-h:66px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    html{scrollbar-gutter:stable both-edges}
+    body{
+      margin:0; color:var(--ink); background:var(--bg);
+      font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      line-height:1.65; overflow-x:hidden;
+      background-image:
+        linear-gradient(135deg, rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(45deg,  rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size:28px 28px, 28px 28px; background-position:0 0, 14px 14px;
+    }
+    body::after{
+      content:""; position:fixed; inset:0; pointer-events:none;
+      background:
+        radial-gradient(1200px 650px at 10% 10%, rgba(225,186,99,.10), transparent 55%),
+        radial-gradient(1000px 600px at 90% 85%, rgba(198,146,74,.10), transparent 55%),
+        radial-gradient(80% 100% at 50% 120%, rgba(0,0,0,.55), transparent 60%);
+      mix-blend-mode:screen; opacity:.75;
+    }
+
+    /* Top Nav */
+    .nav{
+      position:sticky; top:0; z-index:50; height:var(--nav-h);
+      display:flex; align-items:center; gap:16px; padding:0 18px;
+      background:rgba(17,19,23,.78); backdrop-filter:saturate(140%) blur(10px);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .brand{
+      font-weight:800; letter-spacing:.02em; margin-right:auto; font-size:18px; line-height:1;
+      background:linear-gradient(120deg, var(--gold-3), var(--gold-1) 30%, var(--gold-2) 55%, #F6D58E 70%, var(--gold-3));
+      background-size:200% 100%; -webkit-background-clip:text; background-clip:text; color:transparent;
+      animation:foil 12s ease-in-out infinite;
+    }
+    @keyframes foil{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+    .menu{display:flex; gap:6px; align-items:center}
+    .menu a, .menu button{
+      color:var(--ink); text-decoration:none; font-weight:600;
+      padding:10px 12px; border-radius:12px; border:0; background:transparent;
+      display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+      transition:background .18s, transform .18s, color .18s;
+    }
+    .menu a:hover,.menu button:hover{ background:rgba(255,255,255,.06); transform:translateY(-1px) }
+    .menu-toggle{display:none}
+    @media (max-width:880px){
+      .menu{display:none}
+      .menu.open{display:flex; position:absolute; top:var(--nav-h); left:0; right:0; padding:10px; background:rgba(17,19,23,.95); border-bottom:1px solid rgba(255,255,255,.08); flex-direction:column; align-items:flex-start}
+      .menu-toggle{display:inline-flex; margin-left:auto; background:transparent; border:0; color:var(--ink); font-weight:800; padding:8px 10px; border-radius:10px}
+    }
+
+    /* Hero */
+    .wrap{ max-width:1200px; margin:0 auto; padding:22px 18px }
+    .hero{
+      margin-bottom:14px; padding:18px; border-radius:var(--radius);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)), var(--panel);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .hero h1{ margin:0 0 6px; font-size:clamp(22px,4.2vw,34px) }
+    .hero p{ margin:0; color:#d7caa3 }
+
+    /* Layout: stepper + panel */
+    .grid{ display:grid; grid-template-columns:280px 1fr; gap:18px }
+    @media (max-width:1000px){ .grid{ grid-template-columns:1fr } }
+
+    /* Stepper */
+    .stepper{
+      position:sticky; top:calc(var(--nav-h) + 12px);
+      align-self:start; padding:14px; border-radius:var(--radius);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)), var(--panel);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .stepper h3{ margin:0 0 10px }
+    .step-list{ list-style:none; padding:0; margin:0; display:grid; gap:8px }
+    .step-item{
+      display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; cursor:pointer;
+      border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.02);
+      transition:background .18s, transform .18s, border-color .18s;
+    }
+    .step-item:hover{ background:rgba(255,255,255,.06); border-color:rgba(225,186,99,.45); transform:translateY(-1px) }
+    .step-item.active{
+      background:linear-gradient(135deg, rgba(225,186,99,.10), rgba(198,146,74,.10));
+      border-color:rgba(225,186,99,.45);
+      box-shadow:0 10px 22px -14px var(--ring);
+    }
+    .dot{
+      width:26px; height:26px; border-radius:999px;
+      background:radial-gradient(circle at 30% 20%, #ffe6b0, var(--gold-1)); color:#111;
+      display:flex; align-items:center; justify-content:center; font-weight:900;
+      box-shadow:inset 0 0 0 2px rgba(0,0,0,.15);
+      font-size:.9rem;
+    }
+    .step-item .label{ font-weight:800 }
+
+    /* Card */
+    .card{
+      position:relative; overflow:hidden;
+      background:var(--panel); border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius);
+      box-shadow:0 8px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .card .inner{ padding:18px }
+    .card h2{ margin:0 0 8px }
+    .section-note{ color:#d7caa3; margin-top:-2px; margin-bottom:8px }
+
+    /* Fields */
+    .fields{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px }
+    .field{ display:flex; flex-direction:column; gap:6px }
+    .field.full{ grid-column:1 / -1 }
+    label{ font-weight:700; font-size:.92rem; color:#eae6d3 }
+    input[type="text"], input[type="number"], input[type="url"], textarea, select{
+      width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.12);
+      background:#1B1E25; color:#fff; outline:none; font-size:14px;
+      transition:border-color .18s, box-shadow .18s;
+    }
+    textarea{ min-height:110px; resize:vertical }
+    input:focus, textarea:focus, select:focus{ border-color:rgba(225,186,99,.45); box-shadow:0 0 0 3px rgba(225,186,99,.20) }
+
+    /* Actions */
+    .actions{ display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; margin-top:12px }
+    .btn{
+      padding:12px 16px; border:none; border-radius:12px; cursor:pointer; font-weight:800; color:#111;
+      background:linear-gradient(135deg,#C6924A,#E1BA63); box-shadow:0 16px 40px -12px rgba(225,186,99,.45);
+      transition:transform .18s, filter .18s;
+    }
+    .btn:hover{ transform:translateY(-1px); filter:brightness(1.03) }
+    .btn.ghost{
+      background:rgba(255,255,255,.06); color:#fff; border:1px solid rgba(255,255,255,.12);
+      box-shadow:none;
+    }
+
+    .progress{ height:8px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden; margin:10px 0 2px }
+    .progress > span{ display:block; height:100%; background:linear-gradient(90deg,#C6924A,#E1BA63); width:0% }
+
+    /* Report overlay */
+    #reportOverlay{ position:fixed; inset:0; background:rgba(11,12,14,.96); display:none; align-items:center; justify-content:center; padding:24px; z-index:100 }
+    #reportBox{ background:#151826; border:1px solid rgba(255,255,255,.10); border-radius:16px; max-width:1100px; width:100%; max-height:92vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 50px 100px -10px rgba(225,186,99,.45) }
+    #reportHeader{ display:flex; justify-content: space-between; align-items:center; padding:14px 18px; gap:10px; border-bottom:1px solid rgba(255,255,255,.08) }
+    #reportHeader h2{ margin:0; font-size:1.2rem; font-weight:800; background:linear-gradient(90deg,#C6924A,#E1BA63); -webkit-background-clip:text; -webkit-text-fill-color:transparent }
+    #reportActions{ display:flex; gap:8px; flex-wrap:wrap }
+    .report-btn{ padding:10px 14px; border:none; border-radius:10px; font-weight:700; cursor:pointer }
+    .report-btn.copy, .report-btn.secondary{ background:rgba(255,255,255,.08); color:#fff }
+    .report-btn.close{ background:linear-gradient(135deg,#C6924A,#E1BA63); color:#111 }
+    #reportContent{ flex:1; overflow:auto; padding:18px; background:#0B0C0E }
+    #reportContent pre{ display:none !important }
+
+    /* Footer */
+    footer{ margin-top:26px; padding:26px 18px; text-align:center; border-top:1px solid rgba(255,255,255,.08); background:linear-gradient(180deg, rgba(255,255,255,.02), transparent); color:#d7caa3; font-size:14px }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar{ width:12px; height:12px }
+    ::-webkit-scrollbar-track{ background:linear-gradient(180deg, rgba(238,203,120,.18), rgba(198,146,74,.10)); border-left:1px solid rgba(238,203,120,.35) }
+    ::-webkit-scrollbar-thumb{ background:linear-gradient(180deg, var(--gold-2), var(--gold-1)); border-radius:10px; border:2px solid rgba(0,0,0,.35); box-shadow:inset 0 0 0 1px rgba(255,255,255,.22) }
+    *{ scrollbar-width:thin; scrollbar-color: var(--gold-1) rgba(255,255,255,.08) }
+  </style>
+</head>
+<body>
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="brand">KEY‑VΦID</div>
+    <button class="menu-toggle" aria-expanded="false" aria-controls="menu">Menu ▾</button>
+    <div id="menu" class="menu">
+      <a href="#">Home</a>
+      <a href="#">Resources</a>
+      <a href="#">About</a>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <div class="hero">
+      <h1>Eller Major Recommender — KeyVoid Gold</h1>
+      <p>Two‑step intake → ranked BSBA majors (MIS, Business Analytics, Finance, Accounting, Management, Marketing). Entrepreneurship runs **senior year only** and is scheduled in the plan automatically.</p>
+      <div class="progress" aria-label="Progress"><span id="progressBar"></span></div>
+      <div class="tiny" id="progressText">Step 1 of 3</div>
+    </div>
+
+    <div class="grid">
+      <!-- STEPPER -->
+      <aside class="stepper" aria-label="Steps">
+        <h3>Steps</h3>
+        <ul class="step-list" id="stepList"></ul>
+      </aside>
+
+      <!-- PANEL -->
+      <section class="card">
+        <div class="inner">
+          <h2 id="sectionTitle">Intake A</h2>
+          <div class="section-note" id="sectionNote">Academic strengths, career goals, and interests.</div>
+
+          <form id="form" novalidate>
+            <div class="fields" id="fields"></div>
+            <div class="actions">
+              <button type="button" class="btn ghost" id="prevBtn">← Back</button>
+              <button type="button" class="btn ghost" id="saveBtn">Save Draft</button>
+              <button type="button" class="btn" id="nextBtn">Continue →</button>
+              <button type="button" class="btn" id="genBtn" style="display:none">Generate Report</button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>© <span id="y"></span> Key‑VΦid. All rights reserved.</footer>
+
+  <!-- REPORT OVERLAY -->
+  <div id="reportOverlay" aria-hidden="true">
+    <div id="reportBox">
+      <div id="reportHeader">
+        <h2>Eller Major Recommender — Report</h2>
+        <div id="reportActions">
+          <button class="report-btn copy" id="copyReport">Copy</button>
+          <button class="report-btn secondary" id="toggleDebug">Debug</button>
+          <button class="report-btn close" id="closeReport">Close</button>
+        </div>
+      </div>
+      <div id="reportContent"></div>
+    </div>
+  </div>
+
+  <script>
+    // =========================
+    // Schema (fields & options)
+    // =========================
+    const SCHEMA = [
+      {
+        key:'intakeA', title:'Intake A', note:'Academic strengths, career goals, and interests.',
+        fields:[
+          {type:'textarea', name:'a.strengths', label:'Academic strengths (subjects, grades)', full:true, placeholder:'E.g., strong in math & stats, comfortable with Python/SQL; excellent writing; led projects'},
+          {type:'textarea', name:'a.goals', label:'Career goals', full:true, placeholder:'E.g., data‑driven product builder, analytics in healthcare, investment finance, consulting, etc.'},
+          {type:'textarea', name:'a.interests', label:'Interests & hobbies', full:true, placeholder:'E.g., coding, statistics, design, social media, leadership, entrepreneurship, investing'}
+        ]
+      },
+      {
+        key:'intakeB', title:'Intake B', note:'Relevant experience, preferred regions, and constraints.',
+        fields:[
+          {type:'textarea', name:'b.experience', label:'Relevant experience', full:true, placeholder:'Internships, projects, certifications (e.g., SQL, Tableau, Google Analytics, Python, Bloomberg)'},
+          {type:'textarea', name:'b.regions', label:'Preferred countries / regions', full:true, placeholder:'E.g., USA (Eller), short‑term abroad options: Germany, Canada, etc.'},
+          {type:'textarea', name:'b.constraints', label:'Other constraints or preferences', full:true, placeholder:'Budget, language, timeline (e.g., accelerated 3‑year, part‑time, scholarship‑focused)'}
+        ]
+      },
+      {
+        key:'review', title:'Review & Generate', note:'Review your inputs and generate the report.',
+        fields:[
+          {type:'textarea', name:'review.notes', label:'Additional notes (optional)', full:true, placeholder:'Anything else you want us to consider.'}
+        ]
+      }
+    ];
+
+    // =========================
+    // Domain logic (majors, scoring)
+    // =========================
+    const MAJORS = [
+      { id:'mis',   name:'Management Information Systems (MIS)', blurb:'Bridge tech and business: systems analysis, databases, product & data workflows.',
+        keywords:['mis','information systems','systems','database','databases','sql','python','java','coding','software','product','cloud','cyber','cybersecurity','ai','ml','data','analytics','it','technology','architecture','api','erp'],
+        clubs:['Cyber Cats','Data Cats','Product Club','Coding Clubs'],
+        roles:['Product Analyst','Business Systems Analyst','Data Engineer (entry)','IT Analyst'] },
+      { id:'ba',    name:'Business Analytics', blurb:'Quant for decisions: statistics, predictive modeling, experimentation, BI.',
+        keywords:['analytics','data','statistics','statistical','modeling','machine learning','ml','tableau','power bi','experiments','ab testing','sql','python','r','forecast','quant'],
+        clubs:['Data Cats','Analytics Club','Kaggle/ML groups'], roles:['Data Analyst','Business Analyst','Growth Analyst','Ops Analytics'] },
+      { id:'fin',   name:'Finance', blurb:'Capital decisions: corporate finance, markets, valuation, risk.',
+        keywords:['finance','investment','banking','ib','valuation','equity research','portfolio','trading','discounted cash flow','dcf','markets','hedge','risk','financial modeling','cfa'],
+        clubs:['Investments Club','Wall Street Scholars','Financial Modeling'], roles:['Financial Analyst','IB Analyst (prep)','Corporate Finance','FP&A'] },
+      { id:'acc',   name:'Accounting', blurb:'Financial reporting, audit, tax; precision, rules, and controls.',
+        keywords:['accounting','audit','auditing','tax','cpa','bookkeeping','gaap','assurance','controls','financial reporting'],
+        clubs:['Beta Alpha Psi','Accounting Society'], roles:['Staff Accountant','Audit/Assurance','Tax Associate','Controllers Track'] },
+      { id:'mgmt',  name:'Business Management', blurb:'People, operations, and strategy: leading teams and running processes.',
+        keywords:['management','operations','ops','leadership','strategy','organizational','project management','supply chain','hr','people','manager'],
+        clubs:['Management Consulting Group','SHRM','Project Management'], roles:['Operations Coordinator','Project Manager (assoc)','People Ops','Consulting Analyst'] },
+      { id:'mkt',   name:'Marketing', blurb:'Audience, brand, and growth: research, creative, digital & product marketing.',
+        keywords:['marketing','brand','branding','social','social media','advertising','ads','seo','sem','content','copy','consumer','ux research','growth','go to market','gtm'],
+        clubs:['American Marketing Association','Ad Clubs','UX groups'], roles:['Marketing Analyst','Growth/Performance','Product Marketing (assoc)','Brand Coordinator'] },
+      { id:'entre', name:'Entrepreneurship (senior‑year sequence)', blurb:'Company creation, venture skills, and innovation – capped in senior year.',
+        keywords:['entrepreneur','entrepreneurship','startup','founder','venture','innovation','accelerator','incubator'],
+        clubs:['Venture Studio / Entrepreneurship clubs','Hackathons'], roles:['Founder','Product Builder','Venture Fellow (intern)'], seniorOnly:true }
+    ];
+
+    function tokenize(s){
+      return String(s||'').toLowerCase().replace(/[^a-z0-9+\s]/g,' ').split(/\s+/).filter(Boolean);
+    }
+
+    function scoreMajors(intake){
+      const text = [intake.strengths,intake.goals,intake.interests,intake.experience,intake.regions,intake.constraints].join('\n');
+      const tokens = tokenize(text);
+      const freq = new Map(); tokens.forEach(t=> freq.set(t, (freq.get(t)||0)+1));
+      const results = MAJORS.map(m=>{
+        let score=0; const hits=[];
+        m.keywords.forEach(kw=>{
+          const k = kw.toLowerCase(); const f = freq.get(k)||0;
+          if(f>0){ const w = /sql|python|r|statistics|model|machine|data|coding|java|cloud|cyber|cfa|audit/.test(k) ? 2 : 1; score += f*w; hits.push(k); }
+        });
+        const nameBonus = (text.toLowerCase().match(new RegExp(m.id,'g'))||[]).length; score += nameBonus*2;
+        return {...m, hits:[...new Set(hits)], score};
+      });
+      const max = Math.max(1, ...results.map(r=>r.score));
+      results.forEach(r=> r.norm = Math.round((r.score/max)*100));
+      return results.sort((a,b)=> b.norm - a.norm);
+    }
+
+    function parseConstraintsNotes(s=''){
+      const t = s.toLowerCase(); const notes=[];
+      if(/budget|\$|scholarship|aid|cost|tuition/.test(t)) notes.push('Budget‑aware: use scholarships, campus jobs, and prioritize paid internships.');
+      if(/accelerated|fast|3\s*year|3-year|early grad/.test(t)) notes.push('Accelerated: leverage AP/CLEP, summer terms, strict prerequisite planning.');
+      if(/part\s*time|part-time|work while studying|working/.test(t)) notes.push('Part‑time load: consider lighter terms and evening/online sections.');
+      const lang = t.match(/english|spanish|hindi|mandarin|german|french/); if(lang) notes.push(`Language focus: ${lang[0]}. Consider a minor/certificate.`);
+      return notes;
+    }
+
+    function buildPlan(top, entrepreneurSignal, notes){
+      const base = top.name.split(' (')[0];
+      const y1 = [
+        'Pre‑business foundation: calculus, micro/macro econ, business writing',
+        'Technology & data literacy: spreadsheet modeling, intro information systems',
+        'Exploration: attend 2–3 club meetings aligned to top matches',
+        'Career setup: resume, LinkedIn, 1 informational interview/month'
+      ];
+      const y2 = [
+        'Core business: accounting I/II, statistics, operations/management survey',
+        `Major preview: entry course in ${base} or tools (SQL/Excel/Tableau)`,
+        'Project #1: team case/hackathon; document outcomes',
+        'Apply for on‑campus/part‑time internship for summer'
+      ];
+      const y3 = [
+        `Major depth: 2–3 upper‑division ${base} courses; build portfolio artifacts`,
+        'Analytics/tech elective to stay versatile (SQL/Python/BI or research methods)',
+        'Leadership: club role; mentor a freshman',
+        'Summer: full internship aligned to top major(s)'
+      ];
+      const y4 = [
+        `Capstone & advanced ${base} coursework; job‑search sprints (2/week)`,
+        entrepreneurSignal ? 'Entrepreneurship sequence (senior‑year): discovery → prototyping → launch showcase' : 'Cross‑functional elective (e.g., negotiations, product, design thinking)',
+        'Ship a final portfolio: 2 projects, 1 case write‑up, 1 reflection',
+        'Network flywheel: referrals, alumni coffees, targeted applications'
+      ];
+      return {y1,y2,y3,y4,notes};
+    }
+
+    function planToMarkdown(plan){
+      const mk = (title, items)=>`**${title}**\n\n- ${items.join('\n- ')}`;
+      const extras = (plan.notes && plan.notes.length) ? `\n\n**Constraints & preferences applied**\n\n- ${plan.notes.join('\n- ')}` : '';
+      return [
+        mk('Year 1 – Discover & Foundations', plan.y1),
+        mk('Year 2 – Core & First Projects',  plan.y2),
+        mk('Year 3 – Depth & Leadership',     plan.y3),
+        mk('Year 4 – Capstone & Launch',      plan.y4)
+      ].join('\n\n') + extras;
+    }
+
+    function rankingTableMarkdown(ranked){
+      const rows = ranked.map((r,i)=>`| ${i+1} | ${r.name} | ${r.norm}% | ${r.blurb} |`).join('\n');
+      return `| # | Major | Match | Why |\n|---:|---|---:|---|\n${rows}`;
+    }
+
+    // ================
+    // State & helpers
+    // ================
+    const LS_KEY = 'eller.major.v1.formState';
+    const formState = loadState();
+    function loadState(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'{}') }catch{return{}} }
+    function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(formState)) }
+    function setVal(name, value){ formState[name] = value; saveState(); updateProgressUI(); }
+    function getVal(name, fallback=null){ return (formState[name] ?? fallback) }
+    function deepify(flat){ const out={}; for(const [k,v] of Object.entries(flat)){ const parts=k.split('.'); let ptr=out; parts.forEach((p,i)=>{ if(i===parts.length-1){ ptr[p]=v; } else { ptr[p]=ptr[p]||{}; ptr=ptr[p]; } }); } return out; }
+
+    // ====================
+    // UI: Stepper & Panel
+    // ====================
+    let currentStep = 0;
+    const stepList = document.getElementById('stepList');
+    const fieldsWrap = document.getElementById('fields');
+    const sectionTitle = document.getElementById('sectionTitle');
+    const sectionNote = document.getElementById('sectionNote');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const genBtn  = document.getElementById('genBtn');
+
+    function renderStepper(){
+      stepList.innerHTML='';
+      SCHEMA.forEach((s,i)=>{
+        const li=document.createElement('li');
+        li.className='step-item'+(i===currentStep?' active':'');
+        li.innerHTML=`<div class="dot">${i+1}</div><div class="label">${s.title}</div>`;
+        li.addEventListener('click', ()=>{ currentStep=i; renderStep(); });
+        stepList.appendChild(li);
+      });
+    }
+
+    function renderStep(){
+      renderStepper();
+      const s=SCHEMA[currentStep];
+      sectionTitle.textContent=s.title; sectionNote.textContent=s.note||'';
+      fieldsWrap.innerHTML=''; s.fields.forEach(f=> renderField(f, fieldsWrap));
+      prevBtn.style.visibility = currentStep===0 ? 'hidden' : 'visible';
+      nextBtn.style.display = currentStep < SCHEMA.length-1 ? 'inline-flex' : 'none';
+      genBtn.style.display  = currentStep === SCHEMA.length-1 ? 'inline-flex' : 'none';
+      updateProgressUI();
+    }
+
+    function updateProgressUI(){
+      const p=((currentStep+1)/SCHEMA.length)*100; document.getElementById('progressBar').style.width=p+'%';
+      document.getElementById('progressText').textContent=`Step ${currentStep+1} of ${SCHEMA.length}`;
+      formState.__progress={step:currentStep}; saveState();
+    }
+
+    // =============
+    // Field render
+    // =============
+    function renderField(f, parent){
+      const wrap=document.createElement('div'); wrap.className='field'+(f.full?' full':''); wrap.dataset.name=f.name; wrap.dataset.type=f.type;
+      if(f.label){ const lab=document.createElement('label'); lab.textContent=f.label; wrap.appendChild(lab); }
+      let control=null; const val=getVal(f.name, '');
+      if(f.type==='textarea'){ control=document.createElement('textarea'); control.value=val||''; if(f.placeholder) control.placeholder=f.placeholder; control.addEventListener('input', ()=> setVal(f.name, control.value)); }
+      else if(f.type==='text' || f.type==='url' || f.type==='number'){ control=document.createElement('input'); control.type=(f.type==='number'?'number':(f.type==='url'?'url':'text')); control.value=val||''; if(f.placeholder) control.placeholder=f.placeholder; control.addEventListener('input', ()=> setVal(f.name, control.value)); }
+      else if(f.type==='select'){ control=document.createElement('select'); (f.options||[]).forEach(opt=>{ const o=document.createElement('option'); o.value=opt; o.textContent=opt; control.appendChild(o); }); control.value=val|| (f.options?.[0]||''); control.addEventListener('change', ()=> setVal(f.name, control.value)); }
+      if(control) wrap.appendChild(control); parent.appendChild(wrap);
+    }
+
+    // =============
+    // Navigation
+    // =============
+    prevBtn.addEventListener('click', ()=>{ if(currentStep>0){ currentStep--; renderStep(); } });
+    nextBtn.addEventListener('click', ()=>{ if(currentStep<SCHEMA.length-1){ currentStep++; renderStep(); } });
+    document.getElementById('saveBtn').addEventListener('click', ()=>{ saveState(); flash('Saved draft'); });
+
+    if(formState.__progress && Number.isInteger(formState.__progress.step)){
+      currentStep=Math.min(Math.max(0, formState.__progress.step), SCHEMA.length-1);
+    }
+
+    // =========
+    // Report
+    // =========
+    const reportOverlay = document.getElementById('reportOverlay');
+    const reportContent = document.getElementById('reportContent');
+    const copyReport = document.getElementById('copyReport');
+    const toggleDebug = document.getElementById('toggleDebug');
+    const closeReport = document.getElementById('closeReport');
+    let debugMode=false; window._lastRawReport=''; window._lastCleanedReport='';
+
+    document.getElementById('genBtn').addEventListener('click', ()=>{
+      const nested = deepify(formState);
+      const intake = {
+        strengths: nested.a?.strengths || '',
+        goals: nested.a?.goals || '',
+        interests: nested.a?.interests || '',
+        experience: nested.b?.experience || '',
+        regions: nested.b?.regions || '',
+        constraints: nested.b?.constraints || ''
+      };
+      const ranked = scoreMajors(intake);
+      const top = ranked[0];
+      const entrepreneurSignal = ranked.find(r=> r.id==='entre' && r.norm>0);
+      const notes = parseConstraintsNotes(intake.constraints);
+      const plan = buildPlan(top, !!entrepreneurSignal, notes);
+
+      const md = [
+        `# Eller Major Recommender – Report`,
+        `\n`,
+        `## Intake Snapshot`,
+        `**Strengths:** ${intake.strengths || '-'}`,
+        `\n**Goals:** ${intake.goals || '-'}`,
+        `\n**Interests:** ${intake.interests || '-'}`,
+        `\n**Experience:** ${intake.experience || '-'}`,
+        `\n**Regions:** ${intake.regions || '-'}`,
+        `\n**Constraints:** ${intake.constraints || '-'}`,
+        `\n`,
+        `## Ranked Matches`,
+        rankingTableMarkdown(ranked),
+        entrepreneurSignal ? `\n> Entrepreneurship interest detected. Venture coursework is typically concentrated in **senior year** – the plan schedules it there while you build a marketable base major first.` : '',
+        `\n`,
+        `## Chronological Plan (based on top match: **${top.name}**)`,
+        planToMarkdown(plan),
+        `\n`,
+        `## Next‑Step Actions (quick hits)`,
+        `- Attend two club meetings aligned to your top 2 matches`,
+        `- Book a 20‑minute chat with a junior/senior + 1 academic advisor`,
+        `- Spin up a small portfolio project (1–2 weeks) that showcases your tools`,
+        `- Draft a simple resume + LinkedIn refresh`
+      ].filter(Boolean).join('\n');
+
+      showReportOverlay(md);
+    });
+
+    function cleanMarkdown(md){ return String(md||'').trim(); }
+    function showReportOverlay(md){
+      reportContent.innerHTML='';
+      window._lastRawReport=String(md||'');
+      window._lastCleanedReport=cleanMarkdown(window._lastRawReport);
+      const rendered=document.createElement('div');
+      try{ rendered.innerHTML = marked.parse(window._lastCleanedReport); }catch{ rendered.textContent=window._lastCleanedReport; }
+      reportContent.appendChild(rendered);
+      const pre=document.createElement('pre'); pre.textContent=window._lastCleanedReport; reportContent.appendChild(pre);
+      debugMode=false; toggleDebug.textContent='Debug';
+      reportOverlay.style.display='flex'; reportOverlay.setAttribute('aria-hidden','false');
+    }
+    closeReport.addEventListener('click', ()=>{ reportOverlay.style.display='none'; reportOverlay.setAttribute('aria-hidden','true'); });
+    copyReport.addEventListener('click', ()=>{ const text = debugMode ? (window._lastRawReport||'') : (window._lastCleanedReport||''); navigator.clipboard.writeText(text).then(()=>{ copyReport.textContent='Copied!'; setTimeout(()=> copyReport.textContent='Copy', 1200); }); });
+    toggleDebug.addEventListener('click', ()=>{ if(!window._lastRawReport) return; reportContent.innerHTML=''; debugMode=!debugMode; const t = debugMode?window._lastRawReport:window._lastCleanedReport; const div=document.createElement('div'); try{ div.innerHTML=marked.parse(t); }catch{ div.textContent=t; } reportContent.appendChild(div); const pre=document.createElement('pre'); pre.textContent=t; reportContent.appendChild(pre); toggleDebug.textContent = debugMode ? 'Hide Debug' : 'Debug'; });
+
+    // =============
+    // Utilities
+    // =============
+    function flash(msg){ const b=document.createElement('div'); b.textContent=msg; b.style.position='fixed'; b.style.right='18px'; b.style.bottom='18px'; b.style.background='linear-gradient(135deg,#C6924A,#E1BA63)'; b.style.color='#111'; b.style.padding='10px 14px'; b.style.fontWeight='800'; b.style.borderRadius='10px'; b.style.boxShadow='0 20px 40px -10px rgba(225,186,99,.45)'; b.style.zIndex='200'; document.body.appendChild(b); setTimeout(()=>{ b.style.transition='opacity .25s'; b.style.opacity='0'; setTimeout(()=>b.remove(),250); }, 1200); }
+
+    // Mobile menu
+    const toggle = document.querySelector('.menu-toggle'); const menu = document.getElementById('menu'); toggle?.addEventListener('click', ()=>{ const open = menu.classList.toggle('open'); toggle.setAttribute('aria-expanded', open ? 'true' : 'false'); });
+
+    // Year
+    document.getElementById('y').textContent = new Date().getFullYear();
+
+    // Boot
+    renderStepper();
+    renderStep();
+  </script>
+</body>
+</html>
